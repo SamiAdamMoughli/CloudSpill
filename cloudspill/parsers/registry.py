@@ -6,7 +6,7 @@ from pathlib import Path
 
 from cloudspill.models.nodes import IaCNode
 from cloudspill.parsers.base import Parser
-from cloudspill.parsers.dockerfile import DockerfileParser
+from cloudspill.parsers.docker import DockerfileParser
 from cloudspill.parsers.terraform import TerraformParser
 
 

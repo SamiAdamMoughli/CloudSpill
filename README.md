@@ -1,3 +1,5 @@
+![alt text](https://github.com/SamiAdamMoughli/CloudSpill/blob/main/logo_cloudspill.png?raw=true)
+
 # CloudSpill
 
 **Static Application Security Testing Engine for Infrastructure-as-Code**
@@ -5,6 +7,9 @@
 CloudSpill parses Terraform configurations and Dockerfiles into a typed AST, builds a directed acyclic graph of resource dependencies, and performs taint analysis to trace how security misconfigurations propagate through your infrastructure.
 
 It is not a regex scanner. It reasons about structure.
+
+![Python](https://img.shields.io/badge/Python-3.6-blue.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## Installation
 

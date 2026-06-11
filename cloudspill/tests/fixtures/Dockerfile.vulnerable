@@ -1,0 +1,25 @@
+# DOCKER-003: Using latest tag on base image
+FROM python:latest
+
+# DOCKER-004: Secret leaked in ENV instruction
+ENV AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+ENV DATABASE_URL=postgresql://admin:supersecret@db:5432/prod
+ENV APP_NAME=cloudspill
+
+# DOCKER-006: Multiple RUN instructions that could be chained
+RUN apt-get update
+RUN apt-get install -y curl wget
+RUN rm -rf /var/lib/apt/lists/*
+
+# DOCKER-005: ADD used instead of COPY
+ADD ./app /opt/app
+COPY ./config /opt/config
+
+WORKDIR /opt/app
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8080
+
+# DOCKER-001: No USER instruction — defaults to root
+CMD ["python", "server.py"]

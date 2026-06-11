@@ -13,49 +13,59 @@
 ## Directory Structure
 
 ```
-bastion/
-├── __init__.py
-├── cli.py                  # Click entry point — thin, delegates to ScanContext
-├── context.py              # ScanContext: owns scan lifecycle and pipeline
-├── models/
+bastion-project/
+├── .gitignore
+├── .pre-commit-config.yaml
+├── ARCHITECTURE.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── README.md
+├── pyproject.toml
+├── bastion/
 │   ├── __init__.py
-│   ├── nodes.py            # IaCNode (with optional children for nesting)
-│   ├── findings.py         # Finding, Severity (rule engine output only)
-│   ├── taint.py            # TaintResult, TaintPath (taint engine output only)
-│   └── graph.py            # Edge, EdgeKind enum, ResourceGraph
-├── parsers/
-│   ├── __init__.py
-│   ├── base.py             # Parser Protocol
-│   ├── terraform.py        # HCL → IaCNode tree
-│   ├── dockerfile.py       # Dockerfile → IaCNode tree
-│   └── registry.py         # ParserRegistry: file extension → parser
-├── rules/
-│   ├── __init__.py         # RuleRegistry: collects + exposes all rules
-│   ├── base.py             # Rule Protocol
-│   ├── s3.py
-│   ├── iam.py
-│   ├── ec2.py
-│   ├── rds.py
-│   └── docker.py
-├── engine/
-│   ├── __init__.py
-│   ├── rule_engine.py      # Walks nodes × rules → list[Finding]
-│   └── taint_engine.py     # BFS over graph from findings → list[TaintResult]
-├── enrichers/
-│   ├── __init__.py
-│   ├── base.py             # Enricher Protocol (optional post-processing)
-│   └── ai.py               # LLM enricher (Gemma 4 / Qwen — opt-in)
-├── output/
-│   ├── __init__.py
-│   ├── base.py             # Formatter Protocol
-│   ├── table.py            # Rich table formatter
-│   ├── json.py             # JSON formatter
-│   └── markdown.py         # Markdown report formatter
+│   ├── py.typed                # PEP 561 — declares typed package
+│   ├── cli.py                  # Click entry point — thin, delegates to ScanContext
+│   ├── context.py              # ScanContext: owns scan lifecycle and pipeline
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── nodes.py            # IaCNode (with optional children for nesting)
+│   │   ├── findings.py         # Finding, Severity (rule engine output only)
+│   │   ├── taint.py            # TaintResult, TaintPath (taint engine output only)
+│   │   └── graph.py            # Edge, EdgeKind enum, ResourceGraph
+│   ├── parsers/
+│   │   ├── __init__.py
+│   │   ├── base.py             # Parser Protocol
+│   │   ├── terraform.py        # HCL → IaCNode tree
+│   │   ├── dockerfile.py       # Dockerfile → IaCNode tree
+│   │   └── registry.py         # ParserRegistry: file extension → parser
+│   ├── rules/
+│   │   ├── __init__.py         # RuleRegistry: collects + exposes all rules
+│   │   ├── base.py             # Rule Protocol
+│   │   ├── s3.py
+│   │   ├── iam.py
+│   │   ├── ec2.py
+│   │   ├── rds.py
+│   │   └── docker.py
+│   ├── engine/
+│   │   ├── __init__.py
+│   │   ├── rule_engine.py      # Walks nodes × rules → list[Finding]
+│   │   └── taint_engine.py     # BFS over graph from findings → list[TaintResult]
+│   ├── enrichers/
+│   │   ├── __init__.py
+│   │   ├── base.py             # Enricher Protocol (optional post-processing)
+│   │   └── ai.py               # LLM enricher (Gemma 4 / Qwen — opt-in)
+│   └── output/
+│       ├── __init__.py
+│       ├── base.py             # Formatter Protocol
+│       ├── table.py            # Rich table formatter
+│       ├── json.py             # JSON formatter
+│       └── markdown.py         # Markdown report formatter
 └── tests/
+    ├── __init__.py
     ├── fixtures/
     │   ├── s3_public.tf
     │   ├── iam_wildcard.tf
-    │   ├── full_stack.tf    # Multi-resource with cross-references
+    │   ├── full_stack.tf       # Multi-resource with cross-references
     │   └── Dockerfile.vulnerable
     ├── test_parsers.py
     ├── test_graph.py

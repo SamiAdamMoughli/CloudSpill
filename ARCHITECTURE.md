@@ -21,7 +21,7 @@ bastion-project/
 ├── LICENSE
 ├── README.md
 ├── pyproject.toml
-├── bastion/
+├── cloudspill/
 │   ├── __init__.py
 │   ├── py.typed                # PEP 561 — declares typed package
 │   ├── cli.py                  # Click entry point — thin, delegates to ScanContext

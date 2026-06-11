@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "cloudspill"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "python-hcl2>=4.0",
+    "rich>=13.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "mypy>=1.10",
+    "black",
+    "isort",
+    "pylint",
+    "bandit",
+]
+
+[project.scripts]
+cloudspill = "cloudspill.cli:scan"
+
+[tool.mypy]
+strict = true
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.messages_control]
+disable = ["C0114", "C0115", "C0116"]

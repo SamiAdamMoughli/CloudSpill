@@ -126,14 +126,15 @@ class TestAIEnricherWithMock:
             assert "private" in results[0].remediation_patch
 
     def test_strips_thinking_tags(self) -> None:
+        from cloudspill.enrichers.parser import parse_llm_response
         content = (
             "<think>Let me analyze this...</think>"
             '{"explanation": "Fixed.", "fix": "done"}'
         )
-        assert "think" not in AIEnricher._strip_thinking(content)
-        stripped = AIEnricher._strip_thinking(content)
-        parsed = __import__("json").loads(stripped)
-        assert parsed["explanation"] == "Fixed."
+        result = parse_llm_response(content)
+        assert result is not None
+        assert "think" not in result.get("explanation", "")
+        assert result["explanation"] == "Fixed."
 
 
 # ─── Prompt building ────────────────────────────────────────────────

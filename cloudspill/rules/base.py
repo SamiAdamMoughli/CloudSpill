@@ -1,15 +1,44 @@
-"""Rule protocol — structural subtyping for all security rules."""
+"""Rule protocol and class-level registration system."""
 
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
 
+# Module-level registry populated by @register at import time.
+# Python's module cache ensures each class is registered exactly once
+# per process regardless of how many times the module is imported.
+_RULE_CLASSES: list[type[Any]] = []
 
-class Rule(Protocol):
+
+def register(cls: type[Any]) -> type[Any]:
+    """Class decorator: register a rule for auto-discovery by RuleRegistry.
+
+    Usage::
+
+        @register
+        class MyNewRule:
+            rule_id = "MYNS-001"
+            severity = Severity.HIGH
+
+            def check(self, node, graph): ...
+
+    Adding the decorator is the only step needed — no changes to __init__.py.
+    """
+    if cls not in _RULE_CLASSES:
+        _RULE_CLASSES.append(cls)
+    return cls
+
+
+def get_registered_rules() -> list[Any]:
+    """Return one fresh instance of every registered rule class."""
+    return [cls() for cls in _RULE_CLASSES]
+
+
+class Rule(Protocol):  # pylint: disable=too-few-public-methods
     """Interface every security rule must satisfy.
 
     Implementations must provide:
@@ -31,4 +60,4 @@ class Rule(Protocol):
         Returns:
             A list of Finding objects. Empty if the node passes the check.
         """
-        ...
+        ...  # pylint: disable=unnecessary-ellipsis

@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from cloudspill.enrichers.ai import AIEnricher, _build_prompt, _read_source_context
+from cloudspill.enrichers.ai import (
+    AIEnricher,
+    _build_prompt,
+    _read_source_context,
+)
+from cloudspill.enrichers.types import EnrichedFinding
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import EdgeKind, ResourceGraph
-from cloudspill.models.nodes import IaCNode
 from cloudspill.models.taint import TaintPath, TaintResult
 
 
@@ -71,16 +74,21 @@ class TestAIEnricherOffline:
         enricher = AIEnricher()
         results = enricher.enrich([_make_finding()], [], ResourceGraph())
         assert len(results) == 1
-        assert "unavailable" in results[0]["explanation"].lower()
+        assert isinstance(results[0], EnrichedFinding)
+        assert "unavailable" in results[0].explanation.lower()
 
     def test_empty_findings(self) -> None:
         enricher = AIEnricher()
         assert enricher.enrich([], [], ResourceGraph()) == []
 
-    def test_result_keys(self) -> None:
+    def test_result_is_typed(self) -> None:
         enricher = AIEnricher()
         result = enricher.enrich([_make_finding()], [], ResourceGraph())[0]
-        assert set(result.keys()) == {"rule_id", "resource", "explanation", "fix"}
+        assert isinstance(result, EnrichedFinding)
+        assert result.finding.rule_id == "S3-001"
+        assert result.finding.resource == "aws_s3_bucket.test"
+        assert isinstance(result.explanation, str)
+        assert isinstance(result.remediation_patch, str)
 
     def test_multiple_findings(self) -> None:
         enricher = AIEnricher()
@@ -98,7 +106,10 @@ class TestAIEnricherWithMock:
         mock_response.json.return_value = {
             "choices": [{
                 "message": {
-                    "content": '{"explanation": "The bucket is public.", "fix": "acl = \\"private\\""}'
+                    "content": (
+                        '{"explanation": "The bucket is public.",'
+                        ' "fix": "acl = \\"private\\""}'
+                    )
                 }
             }]
         }
@@ -106,19 +117,21 @@ class TestAIEnricherWithMock:
 
         enricher = AIEnricher()
         with patch("httpx.Client") as mock_client:
-            mock_client.return_value.__enter__ = MagicMock(return_value=MagicMock(
-                post=MagicMock(return_value=mock_response)
-            ))
+            inner = MagicMock(post=MagicMock(return_value=mock_response))
+            mock_client.return_value.__enter__ = MagicMock(return_value=inner)
             mock_client.return_value.__exit__ = MagicMock(return_value=False)
 
             results = enricher.enrich([_make_finding()], [], ResourceGraph())
-            assert results[0]["explanation"] == "The bucket is public."
-            assert "private" in results[0]["fix"]
+            assert results[0].explanation == "The bucket is public."
+            assert "private" in results[0].remediation_patch
 
     def test_strips_thinking_tags(self) -> None:
-        content_with_thinking = '<think>Let me analyze this...</think>{"explanation": "Fixed.", "fix": "done"}'
-        assert "think" not in AIEnricher._strip_thinking(content_with_thinking)
-        stripped = AIEnricher._strip_thinking(content_with_thinking)
+        content = (
+            "<think>Let me analyze this...</think>"
+            '{"explanation": "Fixed.", "fix": "done"}'
+        )
+        assert "think" not in AIEnricher._strip_thinking(content)
+        stripped = AIEnricher._strip_thinking(content)
         parsed = __import__("json").loads(stripped)
         assert parsed["explanation"] == "Fixed."
 
@@ -151,8 +164,8 @@ class TestPromptBuilding:
 
 
 class TestSourceContext:
-    def test_reads_existing_file(self, tmp_path: pytest.TempPathFactory) -> None:
-        f = tmp_path / "test.tf"  # type: ignore[operator]
+    def test_reads_existing_file(self, tmp_path: Path) -> None:
+        f = tmp_path / "test.tf"
         f.write_text("line1\nline2\nline3\nline4\nline5\n")
         context = _read_source_context(str(f), 3, window=1)
         assert "line2" in context
@@ -163,8 +176,8 @@ class TestSourceContext:
         context = _read_source_context("/nonexistent/path.tf", 1)
         assert "Could not read" in context
 
-    def test_line_numbers_shown(self, tmp_path: pytest.TempPathFactory) -> None:
-        f = tmp_path / "test.tf"  # type: ignore[operator]
+    def test_line_numbers_shown(self, tmp_path: Path) -> None:
+        f = tmp_path / "test.tf"
         f.write_text("a\nb\nc\n")
         context = _read_source_context(str(f), 2, window=0)
         assert "2 |" in context

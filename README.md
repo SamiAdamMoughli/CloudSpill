@@ -72,6 +72,60 @@ If no inference server is reachable, CloudSpill falls back gracefully and contin
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    A([fa:fa-folder IaC Files\n.tf · Dockerfile]) --> B
+
+    subgraph PARSE ["1 · Parse"]
+        B[ParserRegistry\ndispatches by file type]
+        B --> B1[TerraformParser]
+        B --> B2[DockerfileParser]
+        B1 & B2 --> C[/"list[IaCNode]\ntyped AST tree"/]
+    end
+
+    subgraph GRAPH ["2 · Graph"]
+        C --> D[ResourceGraph.build\nscans attribute refs\n& depends_on]
+        D --> E[/"ResourceGraph\nDAG with typed edges\nATTRIBUTE_REF · DEPENDS_ON\nATTACHMENT · SECURITY_GROUP"/]
+    end
+
+    subgraph RULES ["3 · Rules"]
+        E --> F[RuleEngine\nvisits every node × rule\nauto-discovered via @register]
+        F --> G[/"list[Finding]\nrule_id · severity · resource\ntags · remediation"/]
+    end
+
+    subgraph TAINT ["4 · Taint"]
+        G --> H[TaintEngine\nBFS forward through DAG]
+        E --> H
+        H --> I[/"list[TaintResult]\npropagation paths\nwith risk summaries"/]
+    end
+
+    subgraph ENRICH ["5 · Enrich  (optional)"]
+        G & I & E --> J[AIEnricher\nlocal LLM via Ollama / vLLM\ngraceful fallback on timeout]
+        J --> K[/"list[EnrichedFinding]\nexplanation · patch · confidence"/]
+    end
+
+    subgraph OUT ["6 · Output"]
+        G & I & K --> L{Formatter}
+        L --> L1[Table\nRich terminal]
+        L --> L2[JSON\nmachine-readable]
+        L --> L3[Markdown\nCI report]
+    end
+
+    ScanResult["ScanResult\nfindings · taint_results\nenriched_findings · metadata\n— filter by severity —"]
+    I --> ScanResult
+    G --> ScanResult
+    K --> ScanResult
+    ScanResult --> OUT
+
+    style PARSE fill:#1e293b,stroke:#334155,color:#94a3b8
+    style GRAPH fill:#1e293b,stroke:#334155,color:#94a3b8
+    style RULES fill:#1e293b,stroke:#334155,color:#94a3b8
+    style TAINT fill:#1e293b,stroke:#334155,color:#94a3b8
+    style ENRICH fill:#1e293b,stroke:#334155,color:#94a3b8
+    style OUT fill:#1e293b,stroke:#334155,color:#94a3b8
+    style ScanResult fill:#0f172a,stroke:#6366f1,color:#a5b4fc
+```
+
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full pipeline design, data model, and design rationale.
 
 ## Development

@@ -70,11 +70,6 @@ class TableFormatter:
         return summary
 
 
-class JsonFormatter:
-    """JSON output formatter — reexport for backward compat."""
-    pass
-
-
 def _short_path(path: str) -> str:
     """Shorten file path for display."""
     parts = path.replace("\\", "/").split("/")

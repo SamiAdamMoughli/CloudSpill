@@ -16,6 +16,7 @@ import re
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.base import register
 
 # Patterns that suggest a secret in an ENV value
 _SECRET_PATTERNS = [
@@ -39,6 +40,7 @@ def _looks_like_secret(key: str, value: str) -> bool:
     return False
 
 
+@register
 class DockerRootUser:
     """DOCKER-001: USER root or no USER instruction."""
 
@@ -64,6 +66,7 @@ class DockerRootUser:
         return []
 
 
+@register
 class DockerNoUserInstruction:
     """DOCKER-001b: No USER instruction in Dockerfile (whole-file check).
 
@@ -94,6 +97,7 @@ class DockerNoUserInstruction:
         )]
 
 
+@register
 class DockerLatestTag:
     """DOCKER-003: latest tag on base image."""
 
@@ -117,6 +121,7 @@ class DockerLatestTag:
         return []
 
 
+@register
 class DockerSecretInEnv:
     """DOCKER-004: Secret in ENV instruction."""
 
@@ -142,6 +147,7 @@ class DockerSecretInEnv:
         return findings
 
 
+@register
 class DockerAddInsteadOfCopy:
     """DOCKER-005: ADD used instead of COPY."""
 
@@ -168,6 +174,7 @@ class DockerAddInsteadOfCopy:
         )]
 
 
+@register
 class DockerUnchainedRun:
     """DOCKER-006: Multiple consecutive RUN instructions that could be chained."""
 

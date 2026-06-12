@@ -13,10 +13,12 @@ from __future__ import annotations
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.base import register
 
 _RDS_TYPES = frozenset({"aws_db_instance", "aws_rds_cluster"})
 
 
+@register
 class RDSPubliclyAccessible:
     """RDS-001: publicly_accessible = true."""
 
@@ -39,6 +41,7 @@ class RDSPubliclyAccessible:
         return []
 
 
+@register
 class RDSNoEncryption:
     """RDS-002: Storage encryption not enabled."""
 
@@ -61,6 +64,7 @@ class RDSNoEncryption:
         return []
 
 
+@register
 class RDSNoDeletionProtection:
     """RDS-003: Deletion protection not enabled."""
 
@@ -83,6 +87,7 @@ class RDSNoDeletionProtection:
         return []
 
 
+@register
 class RDSNoBackups:
     """RDS-004: Automated backups disabled."""
 

@@ -14,10 +14,12 @@ from __future__ import annotations
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.base import register
 
 _PUBLIC_ACLS = frozenset({"public-read", "public-read-write"})
 
 
+@register
 class S3PublicACL:
     """S3-001: Bucket ACL set to public-read or public-read-write."""
 
@@ -41,6 +43,7 @@ class S3PublicACL:
         return []
 
 
+@register
 class S3BlockPublicAccess:
     """S3-002: block_public_acls not enabled on public access block."""
 
@@ -72,6 +75,7 @@ class S3BlockPublicAccess:
         return []
 
 
+@register
 class S3NoEncryption:
     """S3-003: Server-side encryption not configured."""
 
@@ -107,6 +111,7 @@ class S3NoEncryption:
         return []
 
 
+@register
 class S3NoLogging:
     """S3-004: Access logging not enabled."""
 
@@ -139,6 +144,7 @@ class S3NoLogging:
         return []
 
 
+@register
 class S3NoVersioning:
     """S3-005: Versioning not enabled."""
 

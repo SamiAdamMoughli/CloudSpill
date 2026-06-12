@@ -17,6 +17,7 @@ from typing import Any
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.base import register
 
 _IAM_POLICY_TYPES = frozenset({
     "aws_iam_policy",
@@ -86,6 +87,7 @@ def _is_write_action(action: str) -> bool:
     return any(verb in action for verb in write_verbs)
 
 
+@register
 class IAMWildcardAction:
     """IAM-001: Wildcard Action: '*' in policy."""
 
@@ -114,6 +116,7 @@ class IAMWildcardAction:
         return []
 
 
+@register
 class IAMWildcardResource:
     """IAM-002: Wildcard Resource '*' combined with write actions."""
 
@@ -143,6 +146,7 @@ class IAMWildcardResource:
         return []
 
 
+@register
 class IAMAdminAccess:
     """IAM-003: AdministratorAccess policy attached."""
 
@@ -172,6 +176,7 @@ class IAMAdminAccess:
         return []
 
 
+@register
 class IAMNoMFA:
     """IAM-004: MFA not enforced in policy condition."""
 
@@ -212,6 +217,7 @@ class IAMNoMFA:
         return False
 
 
+@register
 class IAMInlinePolicy:
     """IAM-005: Inline policy instead of managed policy."""
 

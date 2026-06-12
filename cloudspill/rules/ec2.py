@@ -15,6 +15,7 @@ from typing import Any
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.base import register
 
 _OPEN_CIDRS = frozenset({"0.0.0.0/0", "::/0"})
 
@@ -30,6 +31,7 @@ def _get_ingress_rules(node: IaCNode) -> list[dict[str, Any]]:
     return [c.attributes for c in node.children if c.resource_type == "ingress"]
 
 
+@register
 class EC2SSHOpen:
     """EC2-001: Security group allows 0.0.0.0/0 ingress on port 22."""
 
@@ -61,6 +63,7 @@ class EC2SSHOpen:
         return []
 
 
+@register
 class EC2OpenIngress:
     """EC2-002: Security group allows 0.0.0.0/0 ingress on any port."""
 
@@ -94,6 +97,7 @@ class EC2OpenIngress:
         return []
 
 
+@register
 class EC2NoIMDSv2:
     """EC2-003: IMDSv2 not required."""
 
@@ -125,6 +129,7 @@ class EC2NoIMDSv2:
         )]
 
 
+@register
 class EC2PublicIP:
     """EC2-004: Instance has public IP."""
 

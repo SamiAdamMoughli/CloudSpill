@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -27,3 +27,10 @@ class Finding:
     resource: str
     file: str
     line: int
+    # Optional metadata — rules should populate these when known.
+    # tags: compliance frameworks and categories (e.g. "cis-1.3.2", "public-access")
+    # remediation: a short, actionable fix description for this specific finding
+    # references: URLs to relevant documentation or CVEs
+    tags: frozenset[str] = field(default_factory=frozenset)
+    remediation: str | None = None
+    references: tuple[str, ...] = field(default_factory=tuple)

@@ -1,0 +1,16 @@
+# VULNERABILITY: Using 'latest' tag
+FROM ubuntu:latest
+
+# VULNERABILITY: Hardcoding secrets in environment variables
+ENV AZURE_TENANT_ID="00000000-0000-0000-0000-000000000000"
+ENV AZURE_CLIENT_ID="11111111-1111-1111-1111-111111111111"
+ENV AZURE_CLIENT_SECRET="SuperSecretClientSecretKey!"
+
+# VULNERABILITY: Running as root (no USER directive later)
+RUN apt-get update && apt-get install -y python3
+
+# VULNERABILITY: Using ADD instead of COPY for local files
+ADD app.py /app/app.py
+
+WORKDIR /app
+CMD ["python3", "app.py"]

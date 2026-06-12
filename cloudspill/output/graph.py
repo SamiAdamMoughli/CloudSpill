@@ -108,7 +108,9 @@ class MermaidGraphFormatter:
         node_severity: dict[str, Severity] = {}
         for f in findings:
             current = node_severity.get(f.resource)
-            if current is None or list(Severity).index(f.severity) < list(Severity).index(current):
+            if current is None or list(Severity).index(f.severity) < list(
+                Severity
+            ).index(current):
                 node_severity[f.resource] = f.severity
 
         # ── Node declarations ─────────────────────────────────────────────
@@ -151,9 +153,7 @@ class MermaidGraphFormatter:
                             drawn.add(pair)
                             src = _safe_id(nodes_seq[i])
                             tgt = _safe_id(nodes_seq[i + 1])
-                            lines.append(
-                                f"    {src} ==|{_TAINT_LABEL}|==> {tgt}"
-                            )
+                            lines.append(f"    {src} ==|{_TAINT_LABEL}|==> {tgt}")
             lines.append("")
 
         # ── Finding annotations as notes ──────────────────────────────────
@@ -171,15 +171,17 @@ class MermaidGraphFormatter:
             lines.append("")
 
         # ── Style classes ──────────────────────────────────────────────────
-        lines.extend([
-            "    %% ── Styles ──────────────────────────────────────────────",
-            "    classDef critical fill:#7f1d1d,stroke:#ef4444,color:#fecaca",
-            "    classDef high    fill:#78350f,stroke:#f97316,color:#fed7aa",
-            "    classDef medium  fill:#713f12,stroke:#eab308,color:#fef08a",
-            "    classDef low     fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe",
-            "    classDef info    fill:#1e293b,stroke:#94a3b8,color:#e2e8f0",
-            "    linkStyle default stroke:#475569,stroke-width:1.5px",
-        ])
+        lines.extend(
+            [
+                "    %% ── Styles ──────────────────────────────────────────────",
+                "    classDef critical fill:#7f1d1d,stroke:#ef4444,color:#fecaca",
+                "    classDef high    fill:#78350f,stroke:#f97316,color:#fed7aa",
+                "    classDef medium  fill:#713f12,stroke:#eab308,color:#fef08a",
+                "    classDef low     fill:#1e3a5f,stroke:#3b82f6,color:#bfdbfe",
+                "    classDef info    fill:#1e293b,stroke:#94a3b8,color:#e2e8f0",
+                "    linkStyle default stroke:#475569,stroke-width:1.5px",
+            ]
+        )
 
         return "\n".join(lines) + "\n"
 

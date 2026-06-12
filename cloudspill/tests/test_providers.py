@@ -49,9 +49,7 @@ class TestOpenAICompatProvider:
     def _mock_response(self, content: str) -> MagicMock:
         resp = MagicMock()
         resp.raise_for_status = MagicMock()
-        resp.json.return_value = {
-            "choices": [{"message": {"content": content}}]
-        }
+        resp.json.return_value = {"choices": [{"message": {"content": content}}]}
         return resp
 
     def test_returns_content_string(self) -> None:
@@ -105,13 +103,19 @@ class TestOpenAICompatProvider:
 
     def test_raises_on_http_error(self) -> None:
         import httpx
+
+        from cloudspill.enrichers.providers.base import ProviderError
+
         provider = OpenAICompatProvider()
-        with patch("httpx.Client") as mock_client:
+        with (
+            patch("httpx.Client") as mock_client,
+            patch("cloudspill.enrichers.providers.openai_compat.time.sleep"),
+        ):
             inner = MagicMock()
             inner.post.side_effect = httpx.ConnectError("refused")
             mock_client.return_value.__enter__ = MagicMock(return_value=inner)
             mock_client.return_value.__exit__ = MagicMock(return_value=False)
-            with pytest.raises(httpx.ConnectError):
+            with pytest.raises(ProviderError, match="Could not reach"):
                 provider.complete("sys", "usr")
 
     def test_base_url_normalised(self) -> None:
@@ -140,7 +144,9 @@ class TestOpenAIProvider:
         )
         with patch.dict("sys.modules", {"openai": fake_openai}):
             from importlib import reload
+
             import cloudspill.enrichers.providers.openai as mod
+
             reload(mod)
             provider = mod.OpenAIProvider(api_key="sk-test", model="gpt-4o")
             result = provider.complete("system", "user")
@@ -149,7 +155,9 @@ class TestOpenAIProvider:
     def test_raises_import_error_without_sdk(self) -> None:
         with patch.dict("sys.modules", {"openai": None}):  # type: ignore[dict-item]
             from importlib import reload
+
             import cloudspill.enrichers.providers.openai as mod
+
             reload(mod)
             with pytest.raises(ImportError, match="openai package"):
                 mod.OpenAIProvider(api_key="sk-test")
@@ -160,7 +168,9 @@ class TestOpenAIProvider:
         create.return_value = self._make_sdk_response("ok")
         with patch.dict("sys.modules", {"openai": fake_openai}):
             from importlib import reload
+
             import cloudspill.enrichers.providers.openai as mod
+
             reload(mod)
             provider = mod.OpenAIProvider(api_key="sk-test", model="gpt-4o-mini")
             provider.complete("sys", "usr")
@@ -186,7 +196,9 @@ class TestAnthropicProvider:
         )
         with patch.dict("sys.modules", {"anthropic": fake_anthropic}):
             from importlib import reload
+
             import cloudspill.enrichers.providers.anthropic as mod
+
             reload(mod)
             provider = mod.AnthropicProvider(api_key="sk-ant-test")
             result = provider.complete("system", "user")
@@ -195,7 +207,9 @@ class TestAnthropicProvider:
     def test_raises_import_error_without_sdk(self) -> None:
         with patch.dict("sys.modules", {"anthropic": None}):  # type: ignore[dict-item]
             from importlib import reload
+
             import cloudspill.enrichers.providers.anthropic as mod
+
             reload(mod)
             with pytest.raises(ImportError, match="anthropic package"):
                 mod.AnthropicProvider(api_key="sk-ant-test")
@@ -206,7 +220,9 @@ class TestAnthropicProvider:
         create.return_value = self._make_sdk_response("ok")
         with patch.dict("sys.modules", {"anthropic": fake_anthropic}):
             from importlib import reload
+
             import cloudspill.enrichers.providers.anthropic as mod
+
             reload(mod)
             provider = mod.AnthropicProvider(
                 api_key="sk-ant-test", model="claude-haiku-4-5-20251001"
@@ -222,13 +238,17 @@ class TestAnthropicProvider:
         create.return_value = self._make_sdk_response("ok")
         with patch.dict("sys.modules", {"anthropic": fake_anthropic}):
             from importlib import reload
+
             import cloudspill.enrichers.providers.anthropic as mod
+
             reload(mod)
             provider = mod.AnthropicProvider(api_key="sk-ant-test")
             provider.complete("my system", "my user message")
         call_kwargs = create.call_args[1]
         assert call_kwargs["system"] == "my system"
-        assert call_kwargs["messages"] == [{"role": "user", "content": "my user message"}]
+        assert call_kwargs["messages"] == [
+            {"role": "user", "content": "my user message"}
+        ]
 
 
 # ── make_provider factory ─────────────────────────────────────────────────────
@@ -256,9 +276,7 @@ class TestMakeProvider:
             make_provider("grok", model="grok-1")
 
     def test_local_passes_base_url(self) -> None:
-        provider = make_provider(
-            "local", model="x", base_url="http://gpu:8000/v1"
-        )
+        provider = make_provider("local", model="x", base_url="http://gpu:8000/v1")
         assert isinstance(provider, OpenAICompatProvider)
         assert "gpu:8000" in provider.base_url
 

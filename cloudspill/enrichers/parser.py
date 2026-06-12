@@ -172,7 +172,7 @@ def parse_llm_response(content: str) -> dict[str, Any] | None:
     try:
         result = json.loads(text)
         if isinstance(result, dict):
-            return result  # type: ignore[return-value]
+            return result
     except json.JSONDecodeError:
         pass
 
@@ -182,7 +182,7 @@ def parse_llm_response(content: str) -> dict[str, Any] | None:
         try:
             result = json.loads(defenced)
             if isinstance(result, dict):
-                return result  # type: ignore[return-value]
+                return result
         except json.JSONDecodeError:
             text = defenced  # continue from inside the fence
 
@@ -192,7 +192,7 @@ def parse_llm_response(content: str) -> dict[str, Any] | None:
         try:
             result = json.loads(extracted)
             if isinstance(result, dict):
-                return result  # type: ignore[return-value]
+                return result
         except json.JSONDecodeError:
             pass
 
@@ -202,7 +202,7 @@ def parse_llm_response(content: str) -> dict[str, Any] | None:
         try:
             result = json.loads(repaired)
             if isinstance(result, dict):
-                return result  # type: ignore[return-value]
+                return result
         except json.JSONDecodeError:
             pass
 

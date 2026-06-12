@@ -22,11 +22,15 @@ class MarkdownFormatter:
         lines.append("| ID | Severity | Title | Resource | Location |")
         lines.append("|---|---|---|---|---|")
 
-        sorted_findings = sorted(findings, key=lambda f: list(Severity).index(f.severity))
+        sorted_findings = sorted(
+            findings, key=lambda f: list(Severity).index(f.severity)
+        )
         for f in sorted_findings:
             short = f.file.replace("\\", "/").split("/")
             path = "/".join(short[-2:]) if len(short) > 2 else f.file
-            lines.append(f"| {f.rule_id} | {f.severity.value} | {f.title} | `{f.resource}` | `{path}:{f.line}` |")
+            lines.append(
+                f"| {f.rule_id} | {f.severity.value} | {f.title} | `{f.resource}` | `{path}:{f.line}` |"
+            )
 
         # Taint analysis
         if taint_results:
@@ -45,6 +49,8 @@ class MarkdownFormatter:
             counts[f.severity] += 1
         parts = [f"**{counts[s]} {s.value}**" for s in Severity if counts[s] > 0]
         chains = len(taint_results)
-        lines.append(f"\n---\n**Summary:** {' | '.join(parts)} | {chains} taint chain{'s' if chains != 1 else ''}")
+        lines.append(
+            f"\n---\n**Summary:** {' | '.join(parts)} | {chains} taint chain{'s' if chains != 1 else ''}"
+        )
 
         return "\n".join(lines)

@@ -33,6 +33,11 @@ cloudspill = "cloudspill.cli:scan"
 [tool.mypy]
 strict = true
 
+# python-hcl2 ships no type stubs / py.typed marker.
+[[tool.mypy.overrides]]
+module = "hcl2"
+ignore_missing_imports = true
+
 [tool.isort]
 profile = "black"
 

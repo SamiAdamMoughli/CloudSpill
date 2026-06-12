@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections import deque
 
 from cloudspill.models.findings import Finding
-from cloudspill.models.graph import Edge, EdgeKind, ResourceGraph
+from cloudspill.models.graph import EdgeKind, ResourceGraph
 from cloudspill.models.taint import TaintPath, TaintResult
 
 
@@ -27,10 +27,12 @@ class TaintEngine:
         for finding in findings:
             paths = self._bfs_forward(finding)
             if paths:
-                results.append(TaintResult(
-                    finding=finding,
-                    paths=tuple(paths),
-                ))
+                results.append(
+                    TaintResult(
+                        finding=finding,
+                        paths=tuple(paths),
+                    )
+                )
 
         return results
 
@@ -63,20 +65,24 @@ class TaintEngine:
             current_node = current_path[-1]
 
             # Record this path
-            paths.append(TaintPath(
-                nodes=tuple(current_path),
-                edges=tuple(current_edges),
-                risk=self._describe_risk(finding, current_path),
-            ))
+            paths.append(
+                TaintPath(
+                    nodes=tuple(current_path),
+                    edges=tuple(current_edges),
+                    risk=self._describe_risk(finding, current_path),
+                )
+            )
 
             # Continue BFS: find resources that reference the current node
             for edge in self._graph.incoming(current_node):
                 if edge.source not in visited:
                     visited.add(edge.source)
-                    queue.append((
-                        [*current_path, edge.source],
-                        [*current_edges, edge.kind],
-                    ))
+                    queue.append(
+                        (
+                            [*current_path, edge.source],
+                            [*current_edges, edge.kind],
+                        )
+                    )
 
         return paths
 

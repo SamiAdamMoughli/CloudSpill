@@ -67,19 +67,14 @@ def make_provider(
                 "--api-key (or CLOUDSPILL_API_KEY env var) is required"
                 " for --provider openai"
             )
-        return OpenAIProvider(
-            api_key=api_key, model=model, temperature=temperature
-        )
+        return OpenAIProvider(api_key=api_key, model=model, temperature=temperature)
     if name == "anthropic":
         if not api_key:
             raise ValueError(
                 "--api-key (or CLOUDSPILL_API_KEY env var) is required"
                 " for --provider anthropic"
             )
-        return AnthropicProvider(
-            api_key=api_key, model=model, temperature=temperature
-        )
+        return AnthropicProvider(api_key=api_key, model=model, temperature=temperature)
     raise ValueError(
-        f"Unknown provider '{name}'."
-        f" Choose from: {', '.join(_PROVIDER_NAMES)}"
+        f"Unknown provider '{name}'." f" Choose from: {', '.join(_PROVIDER_NAMES)}"
     )

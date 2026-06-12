@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 
 from cloudspill.models.nodes import IaCNode
-from cloudspill.parsers.terraform import TerraformParser
 from cloudspill.parsers.docker import DockerfileParser
 from cloudspill.parsers.registry import ParserRegistry
+from cloudspill.parsers.terraform import TerraformParser
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -344,7 +344,9 @@ class TestDockerfileParserEdgeCases:
 
     def test_multiline_continuation(self, tmp_path: Path) -> None:
         df = tmp_path / "Dockerfile"
-        df.write_text("FROM alpine:3.18\nRUN apk add --no-cache \\\n    curl \\\n    wget\n")
+        df.write_text(
+            "FROM alpine:3.18\nRUN apk add --no-cache \\\n    curl \\\n    wget\n"
+        )
         nodes = DockerfileParser().parse(df)
         run_node = next(n for n in nodes if n.resource_type == "RUN")
         assert "curl" in run_node.attributes["command"]

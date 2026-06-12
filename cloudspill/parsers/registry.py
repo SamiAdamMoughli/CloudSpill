@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from cloudspill.models.errors import ParseError
@@ -9,6 +10,8 @@ from cloudspill.models.nodes import IaCNode
 from cloudspill.parsers.base import Parser
 from cloudspill.parsers.docker import DockerfileParser
 from cloudspill.parsers.terraform import TerraformParser
+
+logger = logging.getLogger(__name__)
 
 
 class ParserRegistry:  # pylint: disable=too-few-public-methods
@@ -38,9 +41,14 @@ class ParserRegistry:  # pylint: disable=too-few-public-methods
                 if parser.can_parse(path):
                     try:
                         nodes.extend(parser.parse(path))
+                    except (OSError, ValueError, SyntaxError) as exc:
+                        logger.warning("Failed to parse %s: %s", path, exc)
+                        self.errors.append(ParseError(file=str(path), message=str(exc)))
                     except Exception as exc:  # pylint: disable=broad-except
-                        self.errors.append(
-                            ParseError(file=str(path), message=str(exc))
-                        )
+                        # HCL grammar errors surface as library-specific types;
+                        # keep the scan alive but record and log them.
+                        logger.warning("Unexpected error parsing %s: %s", path, exc)
+                        logger.debug("Parse traceback for %s", path, exc_info=True)
+                        self.errors.append(ParseError(file=str(path), message=str(exc)))
                     break
         return nodes

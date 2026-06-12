@@ -31,15 +31,17 @@ class S3PublicACL:
             return []
         acl = node.attributes.get("acl", "")
         if acl in _PUBLIC_ACLS:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Bucket publicly readable",
-                description=f"Bucket ACL is set to '{acl}', making contents accessible to anyone on the internet.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Bucket publicly readable",
+                    description=f"Bucket ACL is set to '{acl}', making contents accessible to anyone on the internet.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -63,15 +65,17 @@ class S3BlockPublicAccess:
         disabled = [f for f in flags if node.attributes.get(f) is False]
 
         if disabled:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Public access block not fully enabled",
-                description=f"The following public access protections are disabled: {', '.join(disabled)}.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Public access block not fully enabled",
+                    description=f"The following public access protections are disabled: {', '.join(disabled)}.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -89,25 +93,34 @@ class S3NoEncryption:
         # Check for encryption in attributes or children
         has_encryption = (
             "server_side_encryption_configuration" in node.attributes
-            or any(c.resource_type == "server_side_encryption_configuration" for c in node.children)
+            or any(
+                c.resource_type == "server_side_encryption_configuration"
+                for c in node.children
+            )
         )
         # Also check if there's a separate aws_s3_bucket_server_side_encryption_configuration resource
         # referencing this bucket via the graph
         for edge in graph.incoming(node.node_id):
             ref_node = graph.get_node(edge.source)
-            if ref_node and ref_node.resource_type == "aws_s3_bucket_server_side_encryption_configuration":
+            if (
+                ref_node
+                and ref_node.resource_type
+                == "aws_s3_bucket_server_side_encryption_configuration"
+            ):
                 has_encryption = True
 
         if not has_encryption:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Encryption not configured",
-                description="Server-side encryption is not configured on this bucket. Data at rest is unprotected.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Encryption not configured",
+                    description="Server-side encryption is not configured on this bucket. Data at rest is unprotected.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -122,9 +135,8 @@ class S3NoLogging:
         if node.resource_type != "aws_s3_bucket":
             return []
 
-        has_logging = (
-            "logging" in node.attributes
-            or any(c.resource_type == "logging" for c in node.children)
+        has_logging = "logging" in node.attributes or any(
+            c.resource_type == "logging" for c in node.children
         )
         for edge in graph.incoming(node.node_id):
             ref_node = graph.get_node(edge.source)
@@ -132,15 +144,17 @@ class S3NoLogging:
                 has_logging = True
 
         if not has_logging:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Access logging not enabled",
-                description="Access logging is not configured. Bucket access events are not being recorded.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Access logging not enabled",
+                    description="Access logging is not configured. Bucket access events are not being recorded.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -155,9 +169,8 @@ class S3NoVersioning:
         if node.resource_type != "aws_s3_bucket":
             return []
 
-        has_versioning = (
-            "versioning" in node.attributes
-            or any(c.resource_type == "versioning" for c in node.children)
+        has_versioning = "versioning" in node.attributes or any(
+            c.resource_type == "versioning" for c in node.children
         )
         for edge in graph.incoming(node.node_id):
             ref_node = graph.get_node(edge.source)
@@ -165,22 +178,15 @@ class S3NoVersioning:
                 has_versioning = True
 
         if not has_versioning:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Versioning not enabled",
-                description="Bucket versioning is not enabled. Deleted or overwritten objects cannot be recovered.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Versioning not enabled",
+                    description="Bucket versioning is not enabled. Deleted or overwritten objects cannot be recovered.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
-
-
-S3_RULES = [
-    S3PublicACL(),
-    S3BlockPublicAccess(),
-    S3NoEncryption(),
-    S3NoLogging(),
-    S3NoVersioning(),
-]

@@ -8,12 +8,10 @@ from unittest.mock import patch
 import pytest
 
 from cloudspill.enrichers.ai import AIEnricher, _build_prompt
-from cloudspill.enrichers.prompts import PromptLoader, VALID_MODES, _FALLBACK
-from cloudspill.enrichers.types import EnrichedFinding
+from cloudspill.enrichers.prompts import _FALLBACK, VALID_MODES, PromptLoader
 from cloudspill.models.findings import Finding, Severity
-from cloudspill.models.graph import ResourceGraph
+from cloudspill.models.graph import EdgeKind, ResourceGraph
 from cloudspill.models.taint import TaintPath, TaintResult
-from cloudspill.models.graph import EdgeKind
 
 
 def _make_finding(
@@ -113,15 +111,24 @@ class TestPromptLoaderRender:
         PromptLoader.clear_cache()
 
     def test_render_interpolates_rule_id(self) -> None:
-        result = PromptLoader.render("explain", rule_id="AZ-NSG-001", severity="CRITICAL", resource="res")
+        result = PromptLoader.render(
+            "explain", rule_id="AZ-NSG-001", severity="CRITICAL", resource="res"
+        )
         assert "AZ-NSG-001" in result
 
     def test_render_interpolates_severity(self) -> None:
-        result = PromptLoader.render("explain", rule_id="S3-001", severity="HIGH", resource="res")
+        result = PromptLoader.render(
+            "explain", rule_id="S3-001", severity="HIGH", resource="res"
+        )
         assert "HIGH" in result
 
     def test_render_interpolates_resource(self) -> None:
-        result = PromptLoader.render("explain", rule_id="S3-001", severity="CRITICAL", resource="aws_s3_bucket.my_bucket")
+        result = PromptLoader.render(
+            "explain",
+            rule_id="S3-001",
+            severity="CRITICAL",
+            resource="aws_s3_bucket.my_bucket",
+        )
         assert "aws_s3_bucket.my_bucket" in result
 
     def test_render_unknown_placeholder_left_unchanged(self, tmp_path: Path) -> None:

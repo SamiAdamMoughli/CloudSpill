@@ -50,16 +50,20 @@ class EC2SSHOpen:
             to_port = rule.get("to_port", -1)
 
             if any(c in _OPEN_CIDRS for c in cidr_blocks):
-                if (from_port == 22 and to_port == 22) or (from_port == 0 and to_port == 0):
-                    return [Finding(
-                        rule_id=self.rule_id,
-                        severity=self.severity,
-                        title="SSH open to 0.0.0.0/0",
-                        description="Security group allows SSH (port 22) from any IP address.",
-                        resource=node.node_id,
-                        file=node.source_file,
-                        line=node.line,
-                    )]
+                if (from_port == 22 and to_port == 22) or (
+                    from_port == 0 and to_port == 0
+                ):
+                    return [
+                        Finding(
+                            rule_id=self.rule_id,
+                            severity=self.severity,
+                            title="SSH open to 0.0.0.0/0",
+                            description="Security group allows SSH (port 22) from any IP address.",
+                            resource=node.node_id,
+                            file=node.source_file,
+                            line=node.line,
+                        )
+                    ]
         return []
 
 
@@ -85,15 +89,17 @@ class EC2OpenIngress:
                 # Skip if already caught by EC2-001 (SSH-specific)
                 if from_port == 22 and to_port == 22:
                     continue
-                return [Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title="Ingress open to 0.0.0.0/0",
-                    description=f"Security group allows ingress from any IP on ports {from_port}-{to_port}.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                )]
+                return [
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title="Ingress open to 0.0.0.0/0",
+                        description=f"Security group allows ingress from any IP on ports {from_port}-{to_port}.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                ]
         return []
 
 
@@ -108,9 +114,10 @@ class EC2NoIMDSv2:
         if node.resource_type != "aws_instance":
             return []
 
+        # hcl2 represents a singleton block as either a dict or a [dict].
         metadata = node.attributes.get("metadata_options", {})
-        if isinstance(metadata, dict):
-            if metadata.get("http_tokens") == "required":
+        for block in metadata if isinstance(metadata, list) else [metadata]:
+            if isinstance(block, dict) and block.get("http_tokens") == "required":
                 return []
         # Also check children
         for child in node.children:
@@ -118,15 +125,17 @@ class EC2NoIMDSv2:
                 if child.attributes.get("http_tokens") == "required":
                     return []
 
-        return [Finding(
-            rule_id=self.rule_id,
-            severity=self.severity,
-            title="IMDSv2 not required",
-            description="Instance metadata service v2 is not enforced. Vulnerable to SSRF-based credential theft.",
-            resource=node.node_id,
-            file=node.source_file,
-            line=node.line,
-        )]
+        return [
+            Finding(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                title="IMDSv2 not required",
+                description="Instance metadata service v2 is not enforced. Vulnerable to SSRF-based credential theft.",
+                resource=node.node_id,
+                file=node.source_file,
+                line=node.line,
+            )
+        ]
 
 
 @register
@@ -141,21 +150,15 @@ class EC2PublicIP:
             return []
 
         if node.attributes.get("associate_public_ip_address") is True:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Instance has public IP",
-                description="Instance is configured with a public IP address, increasing attack surface.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Instance has public IP",
+                    description="Instance is configured with a public IP address, increasing attack surface.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
-
-
-EC2_RULES = [
-    EC2SSHOpen(),
-    EC2OpenIngress(),
-    EC2NoIMDSv2(),
-    EC2PublicIP(),
-]

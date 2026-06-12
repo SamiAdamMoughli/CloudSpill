@@ -104,14 +104,16 @@ class TestAIEnricherWithMock:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "choices": [{
-                "message": {
-                    "content": (
-                        '{"explanation": "The bucket is public.",'
-                        ' "fix": "acl = \\"private\\""}'
-                    )
+            "choices": [
+                {
+                    "message": {
+                        "content": (
+                            '{"explanation": "The bucket is public.",'
+                            ' "fix": "acl = \\"private\\""}'
+                        )
+                    }
                 }
-            }]
+            ]
         }
         mock_response.raise_for_status = MagicMock()
 
@@ -127,6 +129,7 @@ class TestAIEnricherWithMock:
 
     def test_strips_thinking_tags(self) -> None:
         from cloudspill.enrichers.parser import parse_llm_response
+
         content = (
             "<think>Let me analyze this...</think>"
             '{"explanation": "Fixed.", "fix": "done"}'

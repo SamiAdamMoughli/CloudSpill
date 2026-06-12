@@ -25,19 +25,26 @@ from cloudspill.models.nodes import IaCNode
 #          locals {
 #          module "name" {
 _BLOCK_RE = re.compile(
-    r'^(?P<type>resource|data|variable|output|locals|module)'
+    r"^(?P<type>resource|data|variable|output|locals|module)"
     r'\s+"?(?P<label1>[^"\s]+)"?'
     r'(?:\s+"?(?P<label2>[^"\s{]+)"?)?'
-    r'\s*\{',
+    r"\s*\{",
 )
 
 # HCL top-level block types that produce IaCNodes.
-_TOP_LEVEL_TYPES = frozenset({"resource", "data", "variable", "output", "locals", "module"})
+_TOP_LEVEL_TYPES = frozenset(
+    {"resource", "data", "variable", "output", "locals", "module"}
+)
 
 
 def _strip_hcl2_quotes(value: str) -> str:
     """Remove the extra surrounding quotes that hcl2 v8+ adds to strings."""
-    if isinstance(value, str) and len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+    if (
+        isinstance(value, str)
+        and len(value) >= 2
+        and value[0] == '"'
+        and value[-1] == '"'
+    ):
         return value[1:-1]
     return value
 
@@ -64,7 +71,9 @@ def _clean_value(value: Any) -> Any:
     return value
 
 
-def _extract_children(attributes: dict[str, Any], source_file: str, parent_id: str, line: int) -> tuple[dict[str, Any], tuple[IaCNode, ...]]:
+def _extract_children(
+    attributes: dict[str, Any], source_file: str, parent_id: str, line: int
+) -> tuple[dict[str, Any], tuple[IaCNode, ...]]:
     """Separate nested block dicts from scalar attributes.
 
     Returns (flat_attributes, children_tuple).
@@ -142,9 +151,7 @@ class TerraformParser:
             for block in raw.get(block_type, []):
                 if not isinstance(block, dict):
                     continue
-                nodes.extend(
-                    self._parse_block(block_type, block, str(path), line_map)
-                )
+                nodes.extend(self._parse_block(block_type, block, str(path), line_map))
 
         return nodes
 
@@ -174,20 +181,28 @@ class TerraformParser:
                 else:
                     node_id = f"{block_type}.{name}"
 
-                line = line_map.get(f"{resource_type}.{name}", 0) or line_map.get(f"{block_type}.{name}", 0)
+                line = line_map.get(f"{resource_type}.{name}", 0) or line_map.get(
+                    f"{block_type}.{name}", 0
+                )
 
-                attributes = _clean_attributes(raw_attrs) if isinstance(raw_attrs, dict) else {}
-                flat_attrs, children = _extract_children(attributes, source_file, node_id, line)
+                attributes = (
+                    _clean_attributes(raw_attrs) if isinstance(raw_attrs, dict) else {}
+                )
+                flat_attrs, children = _extract_children(
+                    attributes, source_file, node_id, line
+                )
 
-                nodes.append(IaCNode(
-                    node_id=node_id,
-                    node_type=block_type,
-                    resource_type=resource_type,
-                    name=name,
-                    attributes=flat_attrs,
-                    children=children,
-                    source_file=source_file,
-                    line=line,
-                ))
+                nodes.append(
+                    IaCNode(
+                        node_id=node_id,
+                        node_type=block_type,
+                        resource_type=resource_type,
+                        name=name,
+                        attributes=flat_attrs,
+                        children=children,
+                        source_file=source_file,
+                        line=line,
+                    )
+                )
 
         return nodes

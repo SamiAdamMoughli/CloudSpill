@@ -188,7 +188,9 @@ class TestAZStorageContainerPublic:
         assert AZStorageContainerPublic().check(node, _empty_graph()) == []
 
     def test_missing_defaults_private_clean(self) -> None:
-        node = _make_node("azurerm_storage_container.c", "azurerm_storage_container", {})
+        node = _make_node(
+            "azurerm_storage_container.c", "azurerm_storage_container", {}
+        )
         assert AZStorageContainerPublic().check(node, _empty_graph()) == []
 
 
@@ -233,7 +235,9 @@ class TestAZNSGSSHOpen:
         assert AZNSGSSHOpen().check(node, _empty_graph()) == []
 
     def test_no_security_rules_clean(self) -> None:
-        node = _make_node("azurerm_network_security_group.nsg", "azurerm_network_security_group", {})
+        node = _make_node(
+            "azurerm_network_security_group.nsg", "azurerm_network_security_group", {}
+        )
         assert AZNSGSSHOpen().check(node, _empty_graph()) == []
 
     def test_wrong_resource_skipped(self) -> None:
@@ -269,10 +273,15 @@ class TestAZNSGOpenIngress:
         assert AZNSGOpenIngress().check(self._nsg("22"), _empty_graph()) == []
 
     def test_restricted_source_clean(self) -> None:
-        assert AZNSGOpenIngress().check(self._nsg(source="192.168.1.0/24"), _empty_graph()) == []
+        assert (
+            AZNSGOpenIngress().check(self._nsg(source="192.168.1.0/24"), _empty_graph())
+            == []
+        )
 
     def test_no_rules_clean(self) -> None:
-        node = _make_node("azurerm_network_security_group.nsg", "azurerm_network_security_group", {})
+        node = _make_node(
+            "azurerm_network_security_group.nsg", "azurerm_network_security_group", {}
+        )
         assert AZNSGOpenIngress().check(node, _empty_graph()) == []
 
 
@@ -300,7 +309,9 @@ class TestAZVMPasswordAuth:
         assert AZVMPasswordAuth().check(node, _empty_graph()) == []
 
     def test_missing_attribute_clean(self) -> None:
-        node = _make_node("azurerm_linux_virtual_machine.vm", "azurerm_linux_virtual_machine", {})
+        node = _make_node(
+            "azurerm_linux_virtual_machine.vm", "azurerm_linux_virtual_machine", {}
+        )
         assert AZVMPasswordAuth().check(node, _empty_graph()) == []
 
     def test_wrong_resource_skipped(self) -> None:
@@ -372,7 +383,9 @@ class TestAZPostgresPublicAccess:
         assert AZPostgresPublicAccess().check(node, _empty_graph()) == []
 
     def test_missing_attribute_clean(self) -> None:
-        node = _make_node("azurerm_postgresql_server.db", "azurerm_postgresql_server", {})
+        node = _make_node(
+            "azurerm_postgresql_server.db", "azurerm_postgresql_server", {}
+        )
         assert AZPostgresPublicAccess().check(node, _empty_graph()) == []
 
 
@@ -400,7 +413,9 @@ class TestAZPostgresNoSSL:
         assert AZPostgresNoSSL().check(node, _empty_graph()) == []
 
     def test_missing_attribute_clean(self) -> None:
-        node = _make_node("azurerm_postgresql_server.db", "azurerm_postgresql_server", {})
+        node = _make_node(
+            "azurerm_postgresql_server.db", "azurerm_postgresql_server", {}
+        )
         assert AZPostgresNoSSL().check(node, _empty_graph()) == []
 
 
@@ -428,7 +443,11 @@ class TestAZPostgresFirewallOpen:
         assert AZPostgresFirewallOpen().check(node, _empty_graph()) == []
 
     def test_missing_start_ip_clean(self) -> None:
-        node = _make_node("azurerm_postgresql_firewall_rule.fw", "azurerm_postgresql_firewall_rule", {})
+        node = _make_node(
+            "azurerm_postgresql_firewall_rule.fw",
+            "azurerm_postgresql_firewall_rule",
+            {},
+        )
         assert AZPostgresFirewallOpen().check(node, _empty_graph()) == []
 
     def test_wrong_resource_skipped(self) -> None:
@@ -515,7 +534,9 @@ class TestAZFunctionAppHttps:
         assert AZFunctionAppHttps().check(node, _empty_graph()) == []
 
     def test_missing_attribute_clean(self) -> None:
-        node = _make_node("azurerm_linux_function_app.fn", "azurerm_linux_function_app", {})
+        node = _make_node(
+            "azurerm_linux_function_app.fn", "azurerm_linux_function_app", {}
+        )
         assert AZFunctionAppHttps().check(node, _empty_graph()) == []
 
     def test_wrong_resource_skipped(self) -> None:

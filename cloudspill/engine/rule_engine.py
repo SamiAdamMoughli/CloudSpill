@@ -28,7 +28,13 @@ class RuleEngine:
 
         return findings
 
-    def _visit(self, node: IaCNode, graph: ResourceGraph, findings: list[Finding], seen: set[tuple[str, str]],) -> None:
+    def _visit(
+        self,
+        node: IaCNode,
+        graph: ResourceGraph,
+        findings: list[Finding],
+        seen: set[tuple[str, str]],
+    ) -> None:
         """Check one node against all rules, then recurse into children."""
         for rule in self._registry.rules:
             for finding in rule.check(node, graph):

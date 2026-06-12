@@ -19,17 +19,31 @@ from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
 from cloudspill.rules.base import register
 
-_IAM_POLICY_TYPES = frozenset({
-    "aws_iam_policy",
-    "aws_iam_role_policy",
-    "aws_iam_user_policy",
-    "aws_iam_group_policy",
-})
+_IAM_POLICY_TYPES = frozenset(
+    {
+        "aws_iam_policy",
+        "aws_iam_role_policy",
+        "aws_iam_user_policy",
+        "aws_iam_group_policy",
+    }
+)
 
-_ADMIN_POLICY_ARNS = frozenset({
-    "arn:aws:iam::aws:policy/AdministratorAccess",
-    "arn:aws:iam::aws:policy/PowerUserAccess",
-})
+_ADMIN_POLICY_ARNS = frozenset(
+    {
+        "arn:aws:iam::aws:policy/AdministratorAccess",
+        "arn:aws:iam::aws:policy/PowerUserAccess",
+    }
+)
+
+
+def _as_statement_list(value: Any) -> list[dict[str, Any]]:
+    """Coerce a policy ``Statement`` field to a list of statement dicts.
+
+    A single statement may be written as one object rather than a list;
+    anything that is not a dict is discarded.
+    """
+    items = value if isinstance(value, list) else [value]
+    return [stmt for stmt in items if isinstance(stmt, dict)]
 
 
 def _extract_policy_document(node: IaCNode) -> list[dict[str, Any]]:
@@ -41,14 +55,14 @@ def _extract_policy_document(node: IaCNode) -> list[dict[str, Any]]:
     policy_raw = node.attributes.get("policy", "")
 
     if isinstance(policy_raw, dict):
-        return policy_raw.get("Statement", [])
+        return _as_statement_list(policy_raw.get("Statement", []))
 
     if isinstance(policy_raw, str):
         # Strip heredoc markers (<<EOF, <<-EOF) and trailing EOF
         cleaned = policy_raw.strip()
         if cleaned.startswith("<<"):
             first_newline = cleaned.index("\n") if "\n" in cleaned else len(cleaned)
-            cleaned = cleaned[first_newline + 1:]
+            cleaned = cleaned[first_newline + 1 :]
             # Remove trailing heredoc marker
             lines = cleaned.rsplit("\n", 1)
             if len(lines) == 2 and lines[1].strip().isalpha():
@@ -58,7 +72,7 @@ def _extract_policy_document(node: IaCNode) -> list[dict[str, Any]]:
         if cleaned.startswith("{"):
             try:
                 doc = json.loads(cleaned)
-                return doc.get("Statement", [])
+                return _as_statement_list(doc.get("Statement", []))
             except (json.JSONDecodeError, AttributeError):
                 return []
 
@@ -83,7 +97,16 @@ def _get_resources(statement: dict[str, Any]) -> list[str]:
 
 def _is_write_action(action: str) -> bool:
     """Heuristic: actions containing write-like verbs."""
-    write_verbs = {"Put", "Create", "Delete", "Update", "Attach", "Detach", "Set", "Remove"}
+    write_verbs = {
+        "Put",
+        "Create",
+        "Delete",
+        "Update",
+        "Attach",
+        "Detach",
+        "Set",
+        "Remove",
+    }
     return any(verb in action for verb in write_verbs)
 
 
@@ -104,15 +127,17 @@ class IAMWildcardAction:
                 continue
             actions = _get_actions(stmt)
             if "*" in actions:
-                return [Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title="Wildcard action in policy",
-                    description="Policy grants Action: '*', allowing all AWS API actions.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                )]
+                return [
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title="Wildcard action in policy",
+                        description="Policy grants Action: '*', allowing all AWS API actions.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                ]
         return []
 
 
@@ -134,15 +159,17 @@ class IAMWildcardResource:
             resources = _get_resources(stmt)
             actions = _get_actions(stmt)
             if "*" in resources and any(_is_write_action(a) for a in actions):
-                return [Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title="Wildcard resource with write actions",
-                    description="Policy grants write actions on Resource: '*', affecting all resources in the account.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                )]
+                return [
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title="Wildcard resource with write actions",
+                        description="Policy grants write actions on Resource: '*', affecting all resources in the account.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                ]
         return []
 
 
@@ -164,15 +191,17 @@ class IAMAdminAccess:
 
         policy_arn = node.attributes.get("policy_arn", "")
         if policy_arn in _ADMIN_POLICY_ARNS:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="AdministratorAccess policy attached",
-                description=f"Policy '{policy_arn}' grants full administrative access to the AWS account.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="AdministratorAccess policy attached",
+                    description=f"Policy '{policy_arn}' grants full administrative access to the AWS account.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -195,21 +224,23 @@ class IAMNoMFA:
             # Check if MFA is enforced anywhere in the condition
             mfa_enforced = self._has_mfa_condition(condition)
             if not mfa_enforced:
-                return [Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title="MFA not enforced on policy",
-                    description="Allow statement has no MFA condition. Compromised credentials grant immediate access.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                )]
+                return [
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title="MFA not enforced on policy",
+                        description="Allow statement has no MFA condition. Compromised credentials grant immediate access.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                ]
         return []
 
     @staticmethod
     def _has_mfa_condition(condition: dict[str, Any]) -> bool:
         """Check if any condition block enforces MFA."""
-        for operator, checks in condition.items():
+        for checks in condition.values():
             if isinstance(checks, dict):
                 for key in checks:
                     if "MultiFactorAuth" in key or "mfa" in key.lower():
@@ -225,24 +256,21 @@ class IAMInlinePolicy:
     severity = Severity.LOW
 
     def check(self, node: IaCNode, graph: ResourceGraph) -> list[Finding]:
-        if node.resource_type not in {"aws_iam_role_policy", "aws_iam_user_policy", "aws_iam_group_policy"}:
+        if node.resource_type not in {
+            "aws_iam_role_policy",
+            "aws_iam_user_policy",
+            "aws_iam_group_policy",
+        }:
             return []
 
-        return [Finding(
-            rule_id=self.rule_id,
-            severity=self.severity,
-            title="Inline policy instead of managed policy",
-            description="Inline policies are harder to audit and reuse. Prefer managed policies.",
-            resource=node.node_id,
-            file=node.source_file,
-            line=node.line,
-        )]
-
-
-IAM_RULES = [
-    IAMWildcardAction(),
-    IAMWildcardResource(),
-    IAMAdminAccess(),
-    IAMNoMFA(),
-    IAMInlinePolicy(),
-]
+        return [
+            Finding(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                title="Inline policy instead of managed policy",
+                description="Inline policies are harder to audit and reuse. Prefer managed policies.",
+                resource=node.node_id,
+                file=node.source_file,
+                line=node.line,
+            )
+        ]

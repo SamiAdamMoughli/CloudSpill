@@ -14,7 +14,6 @@ from cloudspill.enrichers.parser import (
     strip_think_tags,
 )
 
-
 # ── strip_think_tags ──────────────────────────────────────────────────────────
 
 
@@ -298,7 +297,9 @@ class TestParseLLMResponse:
     # ── Strategy 5: partial / truncated JSON ─────────────────────────
 
     def test_missing_close_brace(self) -> None:
-        payload = '{"explanation": "public bucket", "fix": "acl = private", "confidence": 0.9'
+        payload = (
+            '{"explanation": "public bucket", "fix": "acl = private", "confidence": 0.9'
+        )
         result = parse_llm_response(payload)
         assert result is not None
         assert result["explanation"] == "public bucket"

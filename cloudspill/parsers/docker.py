@@ -18,16 +18,30 @@ from cloudspill.models.nodes import IaCNode
 # Matches a Dockerfile instruction: INSTRUCTION arguments
 # Handles multi-line continuations (trailing backslash) by design —
 # we join continued lines before matching.
-_INSTRUCTION_RE = re.compile(
-    r"^(?P<instruction>[A-Z]+)\s+(?P<arguments>.+)$"
-)
+_INSTRUCTION_RE = re.compile(r"^(?P<instruction>[A-Z]+)\s+(?P<arguments>.+)$")
 
 # Known Dockerfile instructions we care about for security analysis.
-_KNOWN_INSTRUCTIONS = frozenset({
-    "FROM", "RUN", "CMD", "ENTRYPOINT", "ENV", "ADD", "COPY",
-    "EXPOSE", "USER", "WORKDIR", "ARG", "LABEL", "VOLUME",
-    "HEALTHCHECK", "SHELL", "STOPSIGNAL", "ONBUILD",
-})
+_KNOWN_INSTRUCTIONS = frozenset(
+    {
+        "FROM",
+        "RUN",
+        "CMD",
+        "ENTRYPOINT",
+        "ENV",
+        "ADD",
+        "COPY",
+        "EXPOSE",
+        "USER",
+        "WORKDIR",
+        "ARG",
+        "LABEL",
+        "VOLUME",
+        "HEALTHCHECK",
+        "SHELL",
+        "STOPSIGNAL",
+        "ONBUILD",
+    }
+)
 
 
 def _join_continuations(lines: list[str]) -> list[tuple[int, str]]:
@@ -165,16 +179,18 @@ class DockerfileParser:
             node_id = f"dockerfile.{filename}.{instruction}.{count}"
             attributes = self._build_attributes(instruction, arguments)
 
-            nodes.append(IaCNode(
-                node_id=node_id,
-                node_type="instruction",
-                resource_type=instruction,
-                name=f"{instruction} {arguments}",
-                attributes=attributes,
-                children=(),
-                source_file=source_file,
-                line=line_no,
-            ))
+            nodes.append(
+                IaCNode(
+                    node_id=node_id,
+                    node_type="instruction",
+                    resource_type=instruction,
+                    name=f"{instruction} {arguments}",
+                    attributes=attributes,
+                    children=(),
+                    source_file=source_file,
+                    line=line_no,
+                )
+            )
 
         return nodes
 
@@ -191,10 +207,16 @@ class DockerfileParser:
                 return {"command": arguments}
             case "COPY":
                 parts = arguments.split()
-                return {"src": parts[0] if parts else "", "dst": parts[-1] if len(parts) > 1 else ""}
+                return {
+                    "src": parts[0] if parts else "",
+                    "dst": parts[-1] if len(parts) > 1 else "",
+                }
             case "ADD":
                 parts = arguments.split()
-                return {"src": parts[0] if parts else "", "dst": parts[-1] if len(parts) > 1 else ""}
+                return {
+                    "src": parts[0] if parts else "",
+                    "dst": parts[-1] if len(parts) > 1 else "",
+                }
             case "EXPOSE":
                 return {"port": arguments}
             case "USER":

@@ -11,6 +11,7 @@ format-handling logic lives there, not here.
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -23,6 +24,8 @@ from cloudspill.enrichers.types import EnrichedFinding
 from cloudspill.models.findings import Finding
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.taint import TaintResult
+
+logger = logging.getLogger(__name__)
 
 _UNAVAILABLE = "[AI unavailable]"
 
@@ -53,9 +56,7 @@ def _read_source_context(file: str, line: int, window: int = 5) -> str:
 
     start = max(0, line - 1 - window)
     end = min(len(lines), line + window)
-    return "\n".join(
-        f"{i + 1} | {lines[i]}" for i in range(start, end)
-    )
+    return "\n".join(f"{i + 1} | {lines[i]}" for i in range(start, end))
 
 
 def _taint_summary(taint: TaintResult | None) -> str:
@@ -128,8 +129,8 @@ class AIEnricher:
         rpm_limit: int | None = None,
         provider_name: str = "default",
     ) -> None:
-        from cloudspill.enrichers.providers.openai_compat import OpenAICompatProvider
         from cloudspill.enrichers.prompts import VALID_MODES
+        from cloudspill.enrichers.providers.openai_compat import OpenAICompatProvider
 
         if mode not in VALID_MODES:
             raise ValueError(
@@ -198,10 +199,7 @@ class AIEnricher:
 
             workers = min(len(findings), 5)
             with ThreadPoolExecutor(max_workers=workers) as pool:
-                futures = {
-                    pool.submit(_run, i, f): f
-                    for i, f in enumerate(findings)
-                }
+                futures = {pool.submit(_run, i, f): f for i, f in enumerate(findings)}
                 for future in as_completed(futures):
                     idx, enriched = future.result()
                     ordered[idx] = enriched
@@ -253,9 +251,14 @@ class AIEnricher:
         )
 
     def _call_model(self, system: str, user: str) -> dict[str, Any] | None:
+        # Providers raise on any failure; we degrade gracefully rather than
+        # aborting the whole scan, but record and log the reason so it is
+        # visible under -v / --debug instead of silently swallowed.
         try:
             content = self._provider.complete(system, user)
             return parse_llm_response(content)
         except Exception as exc:  # pylint: disable=broad-except
             self._last_error = str(exc)
+            logger.warning("Enrichment call failed: %s", exc)
+            logger.debug("Provider error detail", exc_info=True)
             return None

@@ -20,8 +20,12 @@ from cloudspill.rules.base import register
 
 # Patterns that suggest a secret in an ENV value
 _SECRET_PATTERNS = [
-    re.compile(r"(?i)(password|passwd|secret|token|api_key|apikey|access_key|private_key)"),
-    re.compile(r"(?i)^(AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|DATABASE_URL|DB_PASSWORD)$"),
+    re.compile(
+        r"(?i)(password|passwd|secret|token|api_key|apikey|access_key|private_key)"
+    ),
+    re.compile(
+        r"(?i)^(AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID|DATABASE_URL|DB_PASSWORD)$"
+    ),
     re.compile(r"AKIA[0-9A-Z]{16}"),  # AWS access key ID pattern
 ]
 
@@ -54,15 +58,17 @@ class DockerRootUser:
         if node.resource_type == "USER":
             user = node.attributes.get("user", "")
             if user.lower() == "root":
-                return [Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title="Container runs as root",
-                    description="Explicit USER root instruction. Container processes run with full privileges.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                )]
+                return [
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title="Container runs as root",
+                        description="Explicit USER root instruction. Container processes run with full privileges.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                ]
         return []
 
 
@@ -86,15 +92,17 @@ class DockerNoUserInstruction:
             if other.resource_type == "USER" and other.source_file == node.source_file:
                 return []
 
-        return [Finding(
-            rule_id=self.rule_id,
-            severity=self.severity,
-            title="No USER instruction — runs as root",
-            description="Dockerfile has no USER instruction. Container defaults to running as root.",
-            resource=node.node_id,
-            file=node.source_file,
-            line=node.line,
-        )]
+        return [
+            Finding(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                title="No USER instruction — runs as root",
+                description="Dockerfile has no USER instruction. Container defaults to running as root.",
+                resource=node.node_id,
+                file=node.source_file,
+                line=node.line,
+            )
+        ]
 
 
 @register
@@ -109,15 +117,17 @@ class DockerLatestTag:
             return []
         tag = node.attributes.get("tag", "")
         if tag == "latest" or tag == "":
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Base image uses latest tag",
-                description=f"Image '{node.attributes.get('image', '?')}' uses the 'latest' tag. Builds are not reproducible.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Base image uses latest tag",
+                    description=f"Image '{node.attributes.get('image', '?')}' uses the 'latest' tag. Builds are not reproducible.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -135,15 +145,17 @@ class DockerSecretInEnv:
         findings: list[Finding] = []
         for key, value in node.attributes.items():
             if _looks_like_secret(key, str(value)):
-                findings.append(Finding(
-                    rule_id=self.rule_id,
-                    severity=self.severity,
-                    title=f"Secret in ENV: {key}",
-                    description=f"ENV variable '{key}' appears to contain a secret. Secrets in ENV are baked into image layers.",
-                    resource=node.node_id,
-                    file=node.source_file,
-                    line=node.line,
-                ))
+                findings.append(
+                    Finding(
+                        rule_id=self.rule_id,
+                        severity=self.severity,
+                        title=f"Secret in ENV: {key}",
+                        description=f"ENV variable '{key}' appears to contain a secret. Secrets in ENV are baked into image layers.",
+                        resource=node.node_id,
+                        file=node.source_file,
+                        line=node.line,
+                    )
+                )
         return findings
 
 
@@ -163,15 +175,17 @@ class DockerAddInsteadOfCopy:
         if src.startswith("http") or src.endswith((".tar", ".tar.gz", ".tgz")):
             return []
 
-        return [Finding(
-            rule_id=self.rule_id,
-            severity=self.severity,
-            title="ADD used instead of COPY",
-            description="ADD has implicit tar extraction and URL fetch. Use COPY for simple file copying.",
-            resource=node.node_id,
-            file=node.source_file,
-            line=node.line,
-        )]
+        return [
+            Finding(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                title="ADD used instead of COPY",
+                description="ADD has implicit tar extraction and URL fetch. Use COPY for simple file copying.",
+                resource=node.node_id,
+                file=node.source_file,
+                line=node.line,
+            )
+        ]
 
 
 @register
@@ -189,8 +203,11 @@ class DockerUnchainedRun:
 
         # Collect all RUN nodes from this file, ordered by line
         run_nodes = sorted(
-            [n for n in graph.nodes.values()
-             if n.resource_type == "RUN" and n.source_file == node.source_file],
+            [
+                n
+                for n in graph.nodes.values()
+                if n.resource_type == "RUN" and n.source_file == node.source_file
+            ],
             key=lambda n: n.line,
         )
 
@@ -201,22 +218,14 @@ class DockerUnchainedRun:
         if node.node_id != run_nodes[0].node_id:
             return []
 
-        return [Finding(
-            rule_id=self.rule_id,
-            severity=self.severity,
-            title="Multiple RUN instructions could be chained",
-            description=f"{len(run_nodes)} RUN instructions detected. Chain with && to reduce image layers.",
-            resource=node.node_id,
-            file=node.source_file,
-            line=node.line,
-        )]
-
-
-DOCKER_RULES = [
-    DockerRootUser(),
-    DockerNoUserInstruction(),
-    DockerLatestTag(),
-    DockerSecretInEnv(),
-    DockerAddInsteadOfCopy(),
-    DockerUnchainedRun(),
-]
+        return [
+            Finding(
+                rule_id=self.rule_id,
+                severity=self.severity,
+                title="Multiple RUN instructions could be chained",
+                description=f"{len(run_nodes)} RUN instructions detected. Chain with && to reduce image layers.",
+                resource=node.node_id,
+                file=node.source_file,
+                line=node.line,
+            )
+        ]

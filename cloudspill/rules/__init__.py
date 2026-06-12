@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
-from typing import Any
+
+from cloudspill.rules.base import Rule
 
 
 class RuleRegistry:  # pylint: disable=too-few-public-methods
@@ -17,7 +18,7 @@ class RuleRegistry:  # pylint: disable=too-few-public-methods
 
     def __init__(self, enabled: set[str] | None = None) -> None:
         self._enabled = enabled
-        self._rules: list[Any] = []
+        self._rules: list[Rule] = []
         self._discover()
 
     def _discover(self) -> None:
@@ -34,8 +35,7 @@ class RuleRegistry:  # pylint: disable=too-few-public-methods
 
         if self._enabled is not None:
             self._rules = [
-                r for r in all_rules
-                if self._rule_category(r.rule_id) in self._enabled
+                r for r in all_rules if self._rule_category(r.rule_id) in self._enabled
             ]
         else:
             self._rules = all_rules
@@ -46,5 +46,5 @@ class RuleRegistry:  # pylint: disable=too-few-public-methods
         return rule_id.split("-")[0].lower()
 
     @property
-    def rules(self) -> list[Any]:
+    def rules(self) -> list[Rule]:
         return list(self._rules)

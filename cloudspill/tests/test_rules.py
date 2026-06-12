@@ -13,19 +13,19 @@ from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
 from cloudspill.parsers.terraform import TerraformParser
 from cloudspill.rules import RuleRegistry
-from cloudspill.rules.s3 import (
-    S3BlockPublicAccess,
-    S3NoEncryption,
-    S3NoLogging,
-    S3NoVersioning,
-    S3PublicACL,
-)
 from cloudspill.rules.iam import (
     IAMAdminAccess,
     IAMInlinePolicy,
     IAMNoMFA,
     IAMWildcardAction,
     IAMWildcardResource,
+)
+from cloudspill.rules.s3 import (
+    S3BlockPublicAccess,
+    S3NoEncryption,
+    S3NoLogging,
+    S3NoVersioning,
+    S3PublicACL,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -109,7 +109,9 @@ class TestS3PublicACL:
         assert findings[0].severity == Severity.CRITICAL
 
     def test_public_read_write_triggers(self) -> None:
-        node = _make_node("aws_s3_bucket.test", "aws_s3_bucket", {"acl": "public-read-write"})
+        node = _make_node(
+            "aws_s3_bucket.test", "aws_s3_bucket", {"acl": "public-read-write"}
+        )
         assert len(S3PublicACL().check(node, _empty_graph())) == 1
 
     def test_private_acl_clean(self) -> None:
@@ -127,30 +129,42 @@ class TestS3PublicACL:
 
 class TestS3BlockPublicAccess:
     def test_all_false_triggers(self) -> None:
-        node = _make_node("aws_s3_bucket_public_access_block.test", "aws_s3_bucket_public_access_block", {
-            "block_public_acls": False,
-            "block_public_policy": False,
-            "ignore_public_acls": False,
-            "restrict_public_buckets": False,
-        })
+        node = _make_node(
+            "aws_s3_bucket_public_access_block.test",
+            "aws_s3_bucket_public_access_block",
+            {
+                "block_public_acls": False,
+                "block_public_policy": False,
+                "ignore_public_acls": False,
+                "restrict_public_buckets": False,
+            },
+        )
         findings = S3BlockPublicAccess().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "S3-002"
 
     def test_one_false_triggers(self) -> None:
-        node = _make_node("aws_s3_bucket_public_access_block.test", "aws_s3_bucket_public_access_block", {
-            "block_public_acls": True,
-            "block_public_policy": False,
-        })
+        node = _make_node(
+            "aws_s3_bucket_public_access_block.test",
+            "aws_s3_bucket_public_access_block",
+            {
+                "block_public_acls": True,
+                "block_public_policy": False,
+            },
+        )
         assert len(S3BlockPublicAccess().check(node, _empty_graph())) == 1
 
     def test_all_true_clean(self) -> None:
-        node = _make_node("aws_s3_bucket_public_access_block.test", "aws_s3_bucket_public_access_block", {
-            "block_public_acls": True,
-            "block_public_policy": True,
-            "ignore_public_acls": True,
-            "restrict_public_buckets": True,
-        })
+        node = _make_node(
+            "aws_s3_bucket_public_access_block.test",
+            "aws_s3_bucket_public_access_block",
+            {
+                "block_public_acls": True,
+                "block_public_policy": True,
+                "ignore_public_acls": True,
+                "restrict_public_buckets": True,
+            },
+        )
         assert S3BlockPublicAccess().check(node, _empty_graph()) == []
 
 
@@ -163,9 +177,11 @@ class TestS3NoEncryption:
         assert findings[0].rule_id == "S3-003"
 
     def test_encryption_in_attributes_clean(self) -> None:
-        node = _make_node("aws_s3_bucket.test", "aws_s3_bucket", {
-            "server_side_encryption_configuration": {"rule": {}}
-        })
+        node = _make_node(
+            "aws_s3_bucket.test",
+            "aws_s3_bucket",
+            {"server_side_encryption_configuration": {"rule": {}}},
+        )
         assert S3NoEncryption().check(node, ResourceGraph.build([node])) == []
 
 
@@ -177,9 +193,11 @@ class TestS3NoLogging:
         assert findings[0].rule_id == "S3-004"
 
     def test_logging_present_clean(self) -> None:
-        node = _make_node("aws_s3_bucket.test", "aws_s3_bucket", {
-            "logging": {"target_bucket": "logs"}
-        })
+        node = _make_node(
+            "aws_s3_bucket.test",
+            "aws_s3_bucket",
+            {"logging": {"target_bucket": "logs"}},
+        )
         assert S3NoLogging().check(node, ResourceGraph.build([node])) == []
 
 
@@ -191,9 +209,9 @@ class TestS3NoVersioning:
         assert findings[0].rule_id == "S3-005"
 
     def test_versioning_present_clean(self) -> None:
-        node = _make_node("aws_s3_bucket.test", "aws_s3_bucket", {
-            "versioning": {"enabled": True}
-        })
+        node = _make_node(
+            "aws_s3_bucket.test", "aws_s3_bucket", {"versioning": {"enabled": True}}
+        )
         assert S3NoVersioning().check(node, ResourceGraph.build([node])) == []
 
 
@@ -283,29 +301,37 @@ class TestIAMWildcardResource:
 
 class TestIAMAdminAccess:
     def test_admin_policy_triggers(self) -> None:
-        node = _make_node("aws_iam_role_policy_attachment.test", "aws_iam_role_policy_attachment", {
-            "policy_arn": "arn:aws:iam::aws:policy/AdministratorAccess"
-        })
+        node = _make_node(
+            "aws_iam_role_policy_attachment.test",
+            "aws_iam_role_policy_attachment",
+            {"policy_arn": "arn:aws:iam::aws:policy/AdministratorAccess"},
+        )
         findings = IAMAdminAccess().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "IAM-003"
 
     def test_power_user_triggers(self) -> None:
-        node = _make_node("aws_iam_role_policy_attachment.test", "aws_iam_role_policy_attachment", {
-            "policy_arn": "arn:aws:iam::aws:policy/PowerUserAccess"
-        })
+        node = _make_node(
+            "aws_iam_role_policy_attachment.test",
+            "aws_iam_role_policy_attachment",
+            {"policy_arn": "arn:aws:iam::aws:policy/PowerUserAccess"},
+        )
         assert len(IAMAdminAccess().check(node, _empty_graph())) == 1
 
     def test_readonly_clean(self) -> None:
-        node = _make_node("aws_iam_role_policy_attachment.test", "aws_iam_role_policy_attachment", {
-            "policy_arn": "arn:aws:iam::aws:policy/ReadOnlyAccess"
-        })
+        node = _make_node(
+            "aws_iam_role_policy_attachment.test",
+            "aws_iam_role_policy_attachment",
+            {"policy_arn": "arn:aws:iam::aws:policy/ReadOnlyAccess"},
+        )
         assert IAMAdminAccess().check(node, _empty_graph()) == []
 
 
 class TestIAMNoMFA:
     def test_no_mfa_triggers(self) -> None:
-        policy = '{"Statement": [{"Effect": "Allow", "Action": "s3:*", "Resource": "*"}]}'
+        policy = (
+            '{"Statement": [{"Effect": "Allow", "Action": "s3:*", "Resource": "*"}]}'
+        )
         node = _make_node("aws_iam_policy.test", "aws_iam_policy", {"policy": policy})
         findings = IAMNoMFA().check(node, _empty_graph())
         assert len(findings) == 1
@@ -319,7 +345,9 @@ class TestIAMNoMFA:
 
 class TestIAMInlinePolicy:
     def test_inline_role_policy_triggers(self) -> None:
-        node = _make_node("aws_iam_role_policy.test", "aws_iam_role_policy", {"policy": "{}"})
+        node = _make_node(
+            "aws_iam_role_policy.test", "aws_iam_role_policy", {"policy": "{}"}
+        )
         findings = IAMInlinePolicy().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "IAM-005"
@@ -357,58 +385,96 @@ class TestIAMFixtureIntegration:
 
 # ─── EC2 Rules ───────────────────────────────────────────────────────
 
-from cloudspill.rules.ec2 import EC2SSHOpen, EC2OpenIngress, EC2NoIMDSv2, EC2PublicIP
+from cloudspill.rules.ec2 import EC2NoIMDSv2, EC2OpenIngress, EC2PublicIP, EC2SSHOpen
 
 
 class TestEC2SSHOpen:
     def test_ssh_open_triggers(self) -> None:
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {
+                "ingress": [
+                    {"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}
+                ]
+            },
+        )
         findings = EC2SSHOpen().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "EC2-001"
         assert findings[0].severity == Severity.CRITICAL
 
     def test_ssh_private_clean(self) -> None:
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["10.0.0.0/8"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {
+                "ingress": [
+                    {"from_port": 22, "to_port": 22, "cidr_blocks": ["10.0.0.0/8"]}
+                ]
+            },
+        )
         assert EC2SSHOpen().check(node, _empty_graph()) == []
 
     def test_ipv6_open_triggers(self) -> None:
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["::/0"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {"ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["::/0"]}]},
+        )
         assert len(EC2SSHOpen().check(node, _empty_graph())) == 1
 
     def test_wrong_resource_skipped(self) -> None:
-        node = _make_node("aws_instance.test", "aws_instance", {
-            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
-        })
+        node = _make_node(
+            "aws_instance.test",
+            "aws_instance",
+            {
+                "ingress": [
+                    {"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}
+                ]
+            },
+        )
         assert EC2SSHOpen().check(node, _empty_graph()) == []
 
 
 class TestEC2OpenIngress:
     def test_open_8080_triggers(self) -> None:
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 8080, "to_port": 8080, "cidr_blocks": ["0.0.0.0/0"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {
+                "ingress": [
+                    {"from_port": 8080, "to_port": 8080, "cidr_blocks": ["0.0.0.0/0"]}
+                ]
+            },
+        )
         findings = EC2OpenIngress().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "EC2-002"
 
     def test_ssh_not_duplicated(self) -> None:
         """EC2-002 skips port 22 to avoid overlap with EC2-001."""
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {
+                "ingress": [
+                    {"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}
+                ]
+            },
+        )
         assert EC2OpenIngress().check(node, _empty_graph()) == []
 
     def test_private_cidr_clean(self) -> None:
-        node = _make_node("aws_security_group.web", "aws_security_group", {
-            "ingress": [{"from_port": 443, "to_port": 443, "cidr_blocks": ["10.0.0.0/8"]}]
-        })
+        node = _make_node(
+            "aws_security_group.web",
+            "aws_security_group",
+            {
+                "ingress": [
+                    {"from_port": 443, "to_port": 443, "cidr_blocks": ["10.0.0.0/8"]}
+                ]
+            },
+        )
         assert EC2OpenIngress().check(node, _empty_graph()) == []
 
 
@@ -418,31 +484,35 @@ class TestEC2NoIMDSv2:
         assert len(EC2NoIMDSv2().check(node, _empty_graph())) == 1
 
     def test_imdsv2_required_clean(self) -> None:
-        node = _make_node("aws_instance.web", "aws_instance", {
-            "metadata_options": {"http_tokens": "required"}
-        })
+        node = _make_node(
+            "aws_instance.web",
+            "aws_instance",
+            {"metadata_options": {"http_tokens": "required"}},
+        )
         assert EC2NoIMDSv2().check(node, _empty_graph()) == []
 
     def test_imdsv1_optional_triggers(self) -> None:
-        node = _make_node("aws_instance.web", "aws_instance", {
-            "metadata_options": {"http_tokens": "optional"}
-        })
+        node = _make_node(
+            "aws_instance.web",
+            "aws_instance",
+            {"metadata_options": {"http_tokens": "optional"}},
+        )
         assert len(EC2NoIMDSv2().check(node, _empty_graph())) == 1
 
 
 class TestEC2PublicIP:
     def test_public_ip_triggers(self) -> None:
-        node = _make_node("aws_instance.web", "aws_instance", {
-            "associate_public_ip_address": True
-        })
+        node = _make_node(
+            "aws_instance.web", "aws_instance", {"associate_public_ip_address": True}
+        )
         findings = EC2PublicIP().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "EC2-004"
 
     def test_no_public_ip_clean(self) -> None:
-        node = _make_node("aws_instance.web", "aws_instance", {
-            "associate_public_ip_address": False
-        })
+        node = _make_node(
+            "aws_instance.web", "aws_instance", {"associate_public_ip_address": False}
+        )
         assert EC2PublicIP().check(node, _empty_graph()) == []
 
     def test_missing_attribute_clean(self) -> None:
@@ -453,30 +523,33 @@ class TestEC2PublicIP:
 # ─── RDS Rules ───────────────────────────────────────────────────────
 
 from cloudspill.rules.rds import (
-    RDSPubliclyAccessible, RDSNoEncryption, RDSNoDeletionProtection, RDSNoBackups,
+    RDSNoBackups,
+    RDSNoDeletionProtection,
+    RDSNoEncryption,
+    RDSPubliclyAccessible,
 )
 
 
 class TestRDSPubliclyAccessible:
     def test_public_triggers(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "publicly_accessible": True
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"publicly_accessible": True}
+        )
         findings = RDSPubliclyAccessible().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "RDS-001"
         assert findings[0].severity == Severity.CRITICAL
 
     def test_private_clean(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "publicly_accessible": False
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"publicly_accessible": False}
+        )
         assert RDSPubliclyAccessible().check(node, _empty_graph()) == []
 
     def test_rds_cluster_also_caught(self) -> None:
-        node = _make_node("aws_rds_cluster.db", "aws_rds_cluster", {
-            "publicly_accessible": True
-        })
+        node = _make_node(
+            "aws_rds_cluster.db", "aws_rds_cluster", {"publicly_accessible": True}
+        )
         assert len(RDSPubliclyAccessible().check(node, _empty_graph())) == 1
 
 
@@ -486,9 +559,9 @@ class TestRDSNoEncryption:
         assert len(RDSNoEncryption().check(node, _empty_graph())) == 1
 
     def test_encrypted_clean(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "storage_encrypted": True
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"storage_encrypted": True}
+        )
         assert RDSNoEncryption().check(node, _empty_graph()) == []
 
 
@@ -498,25 +571,25 @@ class TestRDSNoDeletionProtection:
         assert len(RDSNoDeletionProtection().check(node, _empty_graph())) == 1
 
     def test_protected_clean(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "deletion_protection": True
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"deletion_protection": True}
+        )
         assert RDSNoDeletionProtection().check(node, _empty_graph()) == []
 
 
 class TestRDSNoBackups:
     def test_zero_retention_triggers(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "backup_retention_period": 0
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"backup_retention_period": 0}
+        )
         findings = RDSNoBackups().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "RDS-004"
 
     def test_positive_retention_clean(self) -> None:
-        node = _make_node("aws_db_instance.db", "aws_db_instance", {
-            "backup_retention_period": 7
-        })
+        node = _make_node(
+            "aws_db_instance.db", "aws_db_instance", {"backup_retention_period": 7}
+        )
         assert RDSNoBackups().check(node, _empty_graph()) == []
 
     def test_missing_retention_clean(self) -> None:
@@ -529,8 +602,12 @@ class TestRDSNoBackups:
 
 from cloudspill.parsers.docker import DockerfileParser as DParser
 from cloudspill.rules.docker import (
-    DockerRootUser, DockerNoUserInstruction, DockerLatestTag,
-    DockerSecretInEnv, DockerAddInsteadOfCopy, DockerUnchainedRun,
+    DockerAddInsteadOfCopy,
+    DockerLatestTag,
+    DockerNoUserInstruction,
+    DockerRootUser,
+    DockerSecretInEnv,
+    DockerUnchainedRun,
 )
 
 
@@ -546,18 +623,26 @@ class TestDockerRootUser:
 
 class TestDockerNoUserInstruction:
     def test_no_user_triggers(self) -> None:
-        from_node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"})
+        from_node = _make_node(
+            "dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"}
+        )
         graph = ResourceGraph.build([from_node])
         findings = DockerNoUserInstruction().check(from_node, graph)
         assert len(findings) == 1
 
     def test_user_present_clean(self) -> None:
-        from_node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12"})
+        from_node = _make_node(
+            "dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12"}
+        )
         user_node = IaCNode(
-            node_id="dockerfile.d.USER.0", node_type="instruction",
-            resource_type="USER", name="USER nobody",
-            attributes={"user": "nobody"}, children=(),
-            source_file="test.tf", line=10,
+            node_id="dockerfile.d.USER.0",
+            node_type="instruction",
+            resource_type="USER",
+            name="USER nobody",
+            attributes={"user": "nobody"},
+            children=(),
+            source_file="test.tf",
+            line=10,
         )
         graph = ResourceGraph.build([from_node, user_node])
         assert DockerNoUserInstruction().check(from_node, graph) == []
@@ -565,27 +650,35 @@ class TestDockerNoUserInstruction:
 
 class TestDockerLatestTag:
     def test_latest_triggers(self) -> None:
-        node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"})
+        node = _make_node(
+            "dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"}
+        )
         findings = DockerLatestTag().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "DOCKER-003"
 
     def test_pinned_clean(self) -> None:
-        node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12-slim"})
+        node = _make_node(
+            "dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12-slim"}
+        )
         assert DockerLatestTag().check(node, _empty_graph()) == []
 
 
 class TestDockerSecretInEnv:
     def test_aws_key_triggers(self) -> None:
-        node = _make_node("dockerfile.d.ENV.0", "ENV", {
-            "AWS_SECRET_ACCESS_KEY": "AKIAIOSFODNN7EXAMPLE"
-        })
+        node = _make_node(
+            "dockerfile.d.ENV.0",
+            "ENV",
+            {"AWS_SECRET_ACCESS_KEY": "AKIAIOSFODNN7EXAMPLE"},
+        )
         assert len(DockerSecretInEnv().check(node, _empty_graph())) == 1
 
     def test_db_url_triggers(self) -> None:
-        node = _make_node("dockerfile.d.ENV.0", "ENV", {
-            "DATABASE_URL": "postgresql://admin:secret@db:5432/prod"
-        })
+        node = _make_node(
+            "dockerfile.d.ENV.0",
+            "ENV",
+            {"DATABASE_URL": "postgresql://admin:secret@db:5432/prod"},
+        )
         assert len(DockerSecretInEnv().check(node, _empty_graph())) == 1
 
     def test_safe_env_clean(self) -> None:
@@ -595,15 +688,23 @@ class TestDockerSecretInEnv:
 
 class TestDockerAddInsteadOfCopy:
     def test_local_add_triggers(self) -> None:
-        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "./app", "dst": "/opt/app"})
+        node = _make_node(
+            "dockerfile.d.ADD.0", "ADD", {"src": "./app", "dst": "/opt/app"}
+        )
         assert len(DockerAddInsteadOfCopy().check(node, _empty_graph())) == 1
 
     def test_url_add_clean(self) -> None:
-        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "https://example.com/file.tar.gz", "dst": "/opt"})
+        node = _make_node(
+            "dockerfile.d.ADD.0",
+            "ADD",
+            {"src": "https://example.com/file.tar.gz", "dst": "/opt"},
+        )
         assert DockerAddInsteadOfCopy().check(node, _empty_graph()) == []
 
     def test_tar_add_clean(self) -> None:
-        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "archive.tar.gz", "dst": "/opt"})
+        node = _make_node(
+            "dockerfile.d.ADD.0", "ADD", {"src": "archive.tar.gz", "dst": "/opt"}
+        )
         assert DockerAddInsteadOfCopy().check(node, _empty_graph()) == []
 
 

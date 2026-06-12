@@ -38,7 +38,9 @@ class TableFormatter:
         table.add_column("Resource", min_width=25)
         table.add_column("File:Line", min_width=15)
 
-        sorted_findings = sorted(findings, key=lambda f: list(Severity).index(f.severity))
+        sorted_findings = sorted(
+            findings, key=lambda f: list(Severity).index(f.severity)
+        )
 
         for f in sorted_findings:
             color = _SEVERITY_COLORS.get(f.severity, "white")
@@ -57,7 +59,9 @@ class TableFormatter:
             self._console.print("[bold]Taint Analysis[/bold]")
             for tr in taint_results:
                 color = _SEVERITY_COLORS.get(tr.finding.severity, "white")
-                tree = Tree(f"[{color}]{tr.finding.rule_id}[/{color}] {tr.finding.resource}")
+                tree = Tree(
+                    f"[{color}]{tr.finding.rule_id}[/{color}] {tr.finding.resource}"
+                )
                 for tp in tr.paths:
                     chain = " → ".join(tp.nodes[1:])
                     tree.add(f"[dim]└──[/dim] {chain}")

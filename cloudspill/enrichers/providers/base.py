@@ -5,6 +5,15 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 
+class ProviderError(RuntimeError):
+    """Raised when an LLM provider returns an unusable or error response.
+
+    Carries a human-readable message describing what went wrong (HTTP status,
+    network failure, or malformed payload) so the enricher can surface it
+    instead of a bare stack trace.
+    """
+
+
 @runtime_checkable
 class LLMProvider(Protocol):
     """Minimal interface every LLM backend must satisfy.

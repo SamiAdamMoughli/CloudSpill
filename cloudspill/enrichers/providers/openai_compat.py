@@ -6,10 +6,15 @@ Default provider when --ai is used without --provider.
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any
 
 import httpx
+
+from cloudspill.enrichers.providers.base import ProviderError
+
+logger = logging.getLogger(__name__)
 
 # Status codes that are transient and worth retrying.
 _RETRYABLE = {429, 500, 502, 503, 504}
@@ -63,23 +68,62 @@ class OpenAICompatProvider:
                     if response.status_code in _RETRYABLE and attempt < _MAX_RETRIES:
                         # Honour Retry-After if present, else exponential backoff.
                         retry_after = response.headers.get("Retry-After")
-                        wait = float(retry_after) if retry_after else _BASE_BACKOFF * (2 ** attempt)
+                        wait = (
+                            float(retry_after)
+                            if retry_after
+                            else _BASE_BACKOFF * (2**attempt)
+                        )
+                        logger.warning(
+                            "Provider returned %s; retrying in %.0fs (%d/%d)",
+                            response.status_code,
+                            wait,
+                            attempt + 1,
+                            _MAX_RETRIES,
+                        )
                         time.sleep(wait)
                         continue
                     response.raise_for_status()
                     body: dict[str, Any] = response.json()
-                return str(body["choices"][0]["message"]["content"]).strip()
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code in _RETRYABLE and attempt < _MAX_RETRIES:
-                    wait = _BASE_BACKOFF * (2 ** attempt)
+                    wait = _BASE_BACKOFF * (2**attempt)
+                    logger.warning(
+                        "HTTP %s from provider; retrying in %.0fs (%d/%d)",
+                        exc.response.status_code,
+                        wait,
+                        attempt + 1,
+                        _MAX_RETRIES,
+                    )
                     time.sleep(wait)
                     last_exc = exc
                     continue
-                raise
+                raise ProviderError(
+                    f"Provider returned HTTP {exc.response.status_code} "
+                    f"from {self._url}"
+                ) from exc
             except (httpx.TimeoutException, httpx.ConnectError) as exc:
                 if attempt < _MAX_RETRIES:
-                    time.sleep(_BASE_BACKOFF * (2 ** attempt))
+                    logger.warning(
+                        "Connection error (%s); retrying in %.0fs (%d/%d)",
+                        type(exc).__name__,
+                        _BASE_BACKOFF * (2**attempt),
+                        attempt + 1,
+                        _MAX_RETRIES,
+                    )
+                    time.sleep(_BASE_BACKOFF * (2**attempt))
                     last_exc = exc
                     continue
-                raise
-        raise last_exc  # type: ignore[misc]
+                raise ProviderError(
+                    f"Could not reach inference server at {self._url}: {exc}"
+                ) from exc
+
+            try:
+                return str(body["choices"][0]["message"]["content"]).strip()
+            except (KeyError, IndexError, TypeError) as exc:
+                raise ProviderError(
+                    f"Malformed chat-completion response from {self._url}"
+                ) from exc
+
+        raise ProviderError(  # pragma: no cover - loop always returns/raises
+            f"Exhausted retries contacting {self._url}: {last_exc}"
+        )

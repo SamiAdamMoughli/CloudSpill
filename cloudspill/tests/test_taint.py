@@ -12,7 +12,7 @@ from cloudspill.engine.taint_engine import TaintEngine
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import EdgeKind, ResourceGraph
 from cloudspill.models.nodes import IaCNode
-from cloudspill.models.taint import TaintPath, TaintResult
+from cloudspill.models.taint import TaintResult
 from cloudspill.parsers.terraform import TerraformParser
 from cloudspill.rules import RuleRegistry
 
@@ -55,9 +55,9 @@ class TestTaintBasicPropagation:
     def test_single_hop(self) -> None:
         """A → B (B references A). Finding on A should taint B."""
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.data.id}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"bucket": "${aws_s3_bucket.data.id}"}
+        )
         graph = ResourceGraph.build([a, b])
         finding = _make_finding("aws_s3_bucket.data")
 
@@ -70,12 +70,12 @@ class TestTaintBasicPropagation:
     def test_multi_hop(self) -> None:
         """A ← B ← C. Finding on A taints B, then C."""
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.data.id}"
-        })
-        c = _make_node("aws_api_gateway.gw", attributes={
-            "lambda": "${aws_lambda_function.fn.arn}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"bucket": "${aws_s3_bucket.data.id}"}
+        )
+        c = _make_node(
+            "aws_api_gateway.gw", attributes={"lambda": "${aws_lambda_function.fn.arn}"}
+        )
         graph = ResourceGraph.build([a, b, c])
         finding = _make_finding("aws_s3_bucket.data")
 
@@ -84,7 +84,11 @@ class TestTaintBasicPropagation:
         # Should have 2 paths: A→B and A→B→C
         assert len(results[0].paths) == 2
         longest = max(results[0].paths, key=lambda p: len(p.nodes))
-        assert longest.nodes == ("aws_s3_bucket.data", "aws_lambda_function.fn", "aws_api_gateway.gw")
+        assert longest.nodes == (
+            "aws_s3_bucket.data",
+            "aws_lambda_function.fn",
+            "aws_api_gateway.gw",
+        )
 
     def test_no_propagation(self) -> None:
         """Isolated node — nothing references it."""
@@ -111,9 +115,9 @@ class TestTaintCyclePrevention:
     def test_no_revisit(self) -> None:
         """BFS should not revisit nodes even if multiple paths exist."""
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.data.id}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"bucket": "${aws_s3_bucket.data.id}"}
+        )
         graph = ResourceGraph.build([a, b])
         finding = _make_finding("aws_s3_bucket.data")
 
@@ -130,9 +134,9 @@ class TestTaintResultStructure:
     @pytest.fixture()
     def result(self) -> TaintResult:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.data.id}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"bucket": "${aws_s3_bucket.data.id}"}
+        )
         graph = ResourceGraph.build([a, b])
         finding = _make_finding("aws_s3_bucket.data")
         results = TaintEngine(graph).propagate([finding])
@@ -164,9 +168,9 @@ class TestTaintResultStructure:
 class TestTaintMultipleFindings:
     def test_each_finding_gets_own_result(self) -> None:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.data.id}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"bucket": "${aws_s3_bucket.data.id}"}
+        )
         graph = ResourceGraph.build([a, b])
         f1 = _make_finding("aws_s3_bucket.data", "S3-001")
         f2 = _make_finding("aws_s3_bucket.data", "S3-003")
@@ -179,9 +183,10 @@ class TestTaintMultipleFindings:
     def test_finding_without_propagation_excluded(self) -> None:
         a = _make_node("aws_s3_bucket.isolated")
         b = _make_node("aws_s3_bucket.connected")
-        c = _make_node("aws_lambda_function.fn", attributes={
-            "bucket": "${aws_s3_bucket.connected.id}"
-        })
+        c = _make_node(
+            "aws_lambda_function.fn",
+            attributes={"bucket": "${aws_s3_bucket.connected.id}"},
+        )
         graph = ResourceGraph.build([a, b, c])
         f1 = _make_finding("aws_s3_bucket.isolated", "S3-001")
         f2 = _make_finding("aws_s3_bucket.connected", "S3-003")
@@ -206,7 +211,9 @@ class TestTaintS3Fixture:
         assert len(taint_results) > 0
 
     def test_s3_001_propagates(self, taint_results: list[TaintResult]) -> None:
-        s3_001 = next((tr for tr in taint_results if tr.finding.rule_id == "S3-001"), None)
+        s3_001 = next(
+            (tr for tr in taint_results if tr.finding.rule_id == "S3-001"), None
+        )
         assert s3_001 is not None
         assert any(
             "aws_s3_bucket_public_access_block.leaky_policy" in tp.nodes

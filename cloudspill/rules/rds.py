@@ -29,15 +29,17 @@ class RDSPubliclyAccessible:
         if node.resource_type not in _RDS_TYPES:
             return []
         if node.attributes.get("publicly_accessible") is True:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Database publicly accessible",
-                description="Database instance is publicly accessible from the internet.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Database publicly accessible",
+                    description="Database instance is publicly accessible from the internet.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -52,15 +54,17 @@ class RDSNoEncryption:
         if node.resource_type not in _RDS_TYPES:
             return []
         if node.attributes.get("storage_encrypted") is not True:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Storage encryption not enabled",
-                description="Database storage is not encrypted. Data at rest is unprotected.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Storage encryption not enabled",
+                    description="Database storage is not encrypted. Data at rest is unprotected.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -75,15 +79,17 @@ class RDSNoDeletionProtection:
         if node.resource_type not in _RDS_TYPES:
             return []
         if node.attributes.get("deletion_protection") is not True:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Deletion protection not enabled",
-                description="Database can be deleted without safeguards. Risk of accidental data loss.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Deletion protection not enabled",
+                    description="Database can be deleted without safeguards. Risk of accidental data loss.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
 
 
@@ -99,21 +105,15 @@ class RDSNoBackups:
             return []
         retention = node.attributes.get("backup_retention_period", None)
         if retention is not None and retention == 0:
-            return [Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title="Automated backups disabled",
-                description="Backup retention period is 0. No automated recovery points are being created.",
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-            )]
+            return [
+                Finding(
+                    rule_id=self.rule_id,
+                    severity=self.severity,
+                    title="Automated backups disabled",
+                    description="Backup retention period is 0. No automated recovery points are being created.",
+                    resource=node.node_id,
+                    file=node.source_file,
+                    line=node.line,
+                )
+            ]
         return []
-
-
-RDS_RULES = [
-    RDSPubliclyAccessible(),
-    RDSNoEncryption(),
-    RDSNoDeletionProtection(),
-    RDSNoBackups(),
-]

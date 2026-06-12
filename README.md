@@ -1,16 +1,31 @@
-![alt text](https://github.com/SamiAdamMoughli/CloudSpill/blob/main/logo_cloudspill.png?raw=true)
+![CloudSpill logo](https://github.com/SamiAdamMoughli/CloudSpill/blob/main/logo_cloudspill.png?raw=true)
 
 # CloudSpill
 
 **Static Application Security Testing Engine for Infrastructure-as-Code**
 
-CloudSpill parses Terraform configurations and Dockerfiles into a typed AST, builds a directed acyclic graph of resource dependencies, and performs taint analysis to trace how security misconfigurations propagate through your infrastructure.
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-448%20passing-brightgreen.svg)](cloudspill/tests/)
+
+CloudSpill parses Terraform configurations and Dockerfiles into a typed AST, builds a directed acyclic graph of resource dependencies, runs structural security rules, and traces how misconfigurations propagate through your infrastructure via taint analysis.
 
 It is not a regex scanner. It reasons about structure.
 
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+---
 
+## Features
+
+- **Structural analysis** — typed AST over Terraform resources and Dockerfile instructions; no regex
+- **Resource graph** — directed acyclic graph of references, attachments, and `depends_on` edges
+- **Taint engine** — BFS propagation traces how a single misconfiguration reaches downstream resources
+- **36+ rules** — AWS (S3, IAM, EC2, RDS, Docker) and Azure (NSG, Storage, DB, VM, RBAC, Function App)
+- **AI enrichment** — optional LLM analysis via Ollama, OpenAI, Anthropic, or Google Gemini
+- **Graph visualisation** — `--graph` outputs a Mermaid diagram with severity-coloured nodes and taint overlays
+- **Multiple output formats** — Rich terminal table, JSON, Markdown
+- **CI/CD integration** — `--fail-on CRITICAL` exits with code 1 on matching severity
+
+---
 
 ## Quickstart
 
@@ -20,15 +35,17 @@ cd CloudSpill
 
 python3 -m venv .venv
 source .venv/bin/activate
-
 pip install -e ".[dev]"
 
 # Run the test suite
 pytest
 
-# Try it on the bundled fixtures
-cloudspill cloudspill/tests/fixtures/ --show-taint
+# Scan the bundled vulnerable fixtures
+cloudspill cloudspill/tests/fixtures/examples/vulneable-aws-stack/ --show-taint
+cloudspill cloudspill/tests/fixtures/examples/vulneable-azure-stack/ --rules az --show-taint
 ```
+
+---
 
 ## Usage
 
@@ -37,38 +54,83 @@ cloudspill cloudspill/tests/fixtures/ --show-taint
 cloudspill ./infrastructure/
 cloudspill main.tf
 
-# Output formats
-cloudspill ./infra --format table       # Rich table (default)
-cloudspill ./infra --format json        # Machine-readable
-cloudspill ./infra --format markdown    # Report file
-
 # Filter by severity
 cloudspill ./infra --min-severity HIGH
+
+# Target specific rule sets (comma-separated)
+cloudspill ./infra --rules s3,iam,ec2
+cloudspill ./infra --rules az               # Azure rules only
+
+# Output formats
+cloudspill ./infra --format table           # Rich table (default)
+cloudspill ./infra --format json            # Machine-readable
+cloudspill ./infra --format markdown        # Report file
 
 # Show taint propagation paths
 cloudspill ./infra --show-taint
 
-# Target specific rule sets
-cloudspill ./infra --rules s3,iam
+# Visualise the resource graph (paste into mermaid.live or GitHub markdown)
+cloudspill ./infra --graph
+cloudspill ./infra --graph --graph-file diagram.md
 
 # Exit code 1 if findings at or above this severity (CI/CD)
 cloudspill ./infra --fail-on CRITICAL
 ```
 
-## AI-Enhanced Analysis (in development)
+---
 
-CloudSpill can enrich findings with LLM-generated explanations and remediation patches using a local reasoning model (Qwen3.6-35B-A3B or Gemma 4 31B QAT) served via Ollama, vLLM, or LM Studio.
+## AI Enrichment
 
-> ⚠️ This feature is still under active development. The `--ai` flag is functional but the prompt design, output formatting, and model integration are subject to change.
+CloudSpill can enrich findings with LLM-generated explanations and remediation patches. Four providers are supported.
+
+### Local (Ollama / vLLM / LM Studio)
 
 ```bash
-# Start your local model server first, then:
-cloudspill ./infra --ai --show-taint
-cloudspill ./infra --ai --model qwen3.6-35b-a3b
-cloudspill ./infra --ai --ai-url http://localhost:1234/v1
+# Start Ollama first, then:
+cloudspill ./infra --ai --model qwen3:8b
+cloudspill ./infra --ai --model gemma3:12b --ai-url http://localhost:1234/v1
+```
+
+### OpenAI
+
+```bash
+export CLOUDSPILL_API_KEY=sk-...
+cloudspill ./infra --ai --provider openai --model gpt-4o
+```
+
+### Anthropic
+
+```bash
+export CLOUDSPILL_API_KEY=sk-ant-...
+cloudspill ./infra --ai --provider anthropic --model claude-haiku-4-5-20251001
+```
+
+### Google Gemini
+
+```bash
+export CLOUDSPILL_API_KEY=...
+cloudspill ./infra --ai --provider google --model gemini-3.5-flash
+
+# Free-tier rate limiting (10 RPM): pace requests to avoid 429s
+cloudspill ./infra --ai --provider google --ai-rpm 9
+```
+
+### Prompt modes
+
+| Mode | Description |
+|---|---|
+| `explain` | Plain-English risk explanation covering what is wrong and the blast radius (default) |
+| `fix` | Minimal copy-paste Terraform / Dockerfile remediation snippet |
+| `triage` | True-positive / false-positive verdict with evidence from source context |
+
+```bash
+cloudspill ./infra --ai --provider google --prompt-mode fix
+cloudspill ./infra --ai --provider anthropic --prompt-mode triage
 ```
 
 If no inference server is reachable, CloudSpill falls back gracefully and continues without AI enrichment.
+
+---
 
 ## Architecture
 
@@ -100,7 +162,7 @@ flowchart TD
     end
 
     subgraph ENRICH ["5 · Enrich  (optional)"]
-        G & I & E --> J[AIEnricher\nlocal LLM via Ollama / vLLM\ngraceful fallback on timeout]
+        G & I & E --> J[AIEnricher\nOllama · OpenAI · Anthropic · Gemini\ngraceful fallback on error]
         J --> K[/"list[EnrichedFinding]\nexplanation · patch · confidence"/]
     end
 
@@ -109,6 +171,7 @@ flowchart TD
         L --> L1[Table\nRich terminal]
         L --> L2[JSON\nmachine-readable]
         L --> L3[Markdown\nCI report]
+        L --> L4[Mermaid\ngraph diagram]
     end
 
     ScanResult["ScanResult\nfindings · taint_results\nenriched_findings · metadata\n— filter by severity —"]
@@ -126,18 +189,21 @@ flowchart TD
     style ScanResult fill:#0f172a,stroke:#6366f1,color:#a5b4fc
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full pipeline design, data model, and design rationale.
+---
 
 ## Development
 
 ```bash
-# Run tests
+# Install with dev dependencies
+pip install -e ".[dev]"
+
+# Run the full test suite (448 tests)
 pytest cloudspill/tests/
 
 # Type checking
 mypy --strict cloudspill/
 
-# Linting
+# Linting and formatting
 pylint cloudspill/ --ignore=tests
 black --check cloudspill/
 isort --check --profile black cloudspill/
@@ -146,9 +212,25 @@ isort --check --profile black cloudspill/
 bandit -r cloudspill/
 ```
 
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup instructions, coding standards, and how to add new rules, parsers, or providers.
+
+---
+
+## Security
+
+To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+---
+
 ## Ethical Use
 
-CloudSpill is a static analysis tool for infrastructure code you own or have explicit written authorisation to audit. It performs no active scanning, no network connections, and no live infrastructure interaction. All analysis is performed on configuration files at rest.
+CloudSpill is a static analysis tool for infrastructure code you own or have explicit written authorisation to audit. It performs no active scanning, no network connections to target infrastructure, and no live infrastructure interaction. All analysis is performed on configuration files at rest.
+
+---
 
 ## License
 

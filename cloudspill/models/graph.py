@@ -8,7 +8,7 @@ explicit depends_on declarations.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
@@ -48,19 +48,23 @@ _BARE_REF_PATTERN = re.compile(
 )
 
 # Resource types that represent IAM attachments
-_ATTACHMENT_TYPES = frozenset({
-    "aws_iam_role_policy_attachment",
-    "aws_iam_user_policy_attachment",
-    "aws_iam_group_policy_attachment",
-    "aws_iam_policy_attachment",
-})
+_ATTACHMENT_TYPES = frozenset(
+    {
+        "aws_iam_role_policy_attachment",
+        "aws_iam_user_policy_attachment",
+        "aws_iam_group_policy_attachment",
+        "aws_iam_policy_attachment",
+    }
+)
 
 # Attributes that reference security groups
-_SG_ATTRIBUTES = frozenset({
-    "vpc_security_group_ids",
-    "security_groups",
-    "security_group_id",
-})
+_SG_ATTRIBUTES = frozenset(
+    {
+        "vpc_security_group_ids",
+        "security_groups",
+        "security_group_id",
+    }
+)
 
 
 class ResourceGraph:
@@ -92,12 +96,14 @@ class ResourceGraph:
                 for dep in depends_on:
                     target = dep.strip('"').strip()
                     if target in node_ids:
-                        graph.add_edge(Edge(
-                            source=node.node_id,
-                            target=target,
-                            kind=EdgeKind.DEPENDS_ON,
-                            attribute="depends_on",
-                        ))
+                        graph.add_edge(
+                            Edge(
+                                source=node.node_id,
+                                target=target,
+                                kind=EdgeKind.DEPENDS_ON,
+                                attribute="depends_on",
+                            )
+                        )
 
             # Scan children too
             for child in node.children:
@@ -117,12 +123,14 @@ class ResourceGraph:
             for ref in refs:
                 if ref in node_ids and ref != node.node_id:
                     kind = self._classify_edge(node, attr_name)
-                    self.add_edge(Edge(
-                        source=node.node_id,
-                        target=ref,
-                        kind=kind,
-                        attribute=attr_name,
-                    ))
+                    self.add_edge(
+                        Edge(
+                            source=node.node_id,
+                            target=ref,
+                            kind=kind,
+                            attribute=attr_name,
+                        )
+                    )
 
     def _extract_refs(self, value: Any) -> list[str]:
         """Pull resource references out of an attribute value."""

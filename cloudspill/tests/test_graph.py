@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,8 +17,8 @@ FIXTURES = Path(__file__).parent / "fixtures"
 def _make_node(
     node_id: str,
     resource_type: str = "aws_test",
-    attributes: dict | None = None,
-    children: tuple = (),
+    attributes: dict[str, Any] | None = None,
+    children: tuple[Any, ...] = (),
 ) -> IaCNode:
     """Helper to build test nodes quickly."""
     return IaCNode(
@@ -108,7 +109,9 @@ class TestGraphEdgeOps:
         graph = ResourceGraph()
         graph.add_node(_make_node("a.b"))
         graph.add_node(_make_node("c.d"))
-        edge = Edge(source="a.b", target="c.d", kind=EdgeKind.ATTRIBUTE_REF, attribute="ref")
+        edge = Edge(
+            source="a.b", target="c.d", kind=EdgeKind.ATTRIBUTE_REF, attribute="ref"
+        )
         graph.add_edge(edge)
         assert len(graph.edges) == 1
 
@@ -116,7 +119,9 @@ class TestGraphEdgeOps:
         graph = ResourceGraph()
         graph.add_node(_make_node("a.b"))
         graph.add_node(_make_node("c.d"))
-        edge = Edge(source="a.b", target="c.d", kind=EdgeKind.ATTRIBUTE_REF, attribute="ref")
+        edge = Edge(
+            source="a.b", target="c.d", kind=EdgeKind.ATTRIBUTE_REF, attribute="ref"
+        )
         graph.add_edge(edge)
         graph.add_edge(edge)
         assert len(graph.edges) == 1
@@ -124,7 +129,9 @@ class TestGraphEdgeOps:
     def test_edges_property_returns_copy(self) -> None:
         graph = ResourceGraph()
         edges = graph.edges
-        edges.append(Edge(source="a", target="b", kind=EdgeKind.DEPENDS_ON, attribute="x"))
+        edges.append(
+            Edge(source="a", target="b", kind=EdgeKind.DEPENDS_ON, attribute="x")
+        )
         assert len(graph.edges) == 0
 
 
@@ -134,9 +141,10 @@ class TestGraphEdgeOps:
 class TestGraphReferenceDetection:
     def test_interpolated_ref(self) -> None:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.proc", attributes={
-            "s3_bucket": "${aws_s3_bucket.data.arn}"
-        })
+        b = _make_node(
+            "aws_lambda_function.proc",
+            attributes={"s3_bucket": "${aws_s3_bucket.data.arn}"},
+        )
         graph = ResourceGraph.build([a, b])
         assert len(graph.edges) == 1
         assert graph.edges[0].source == "aws_lambda_function.proc"
@@ -144,49 +152,52 @@ class TestGraphReferenceDetection:
 
     def test_bare_ref(self) -> None:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_s3_bucket_policy.pol", attributes={
-            "bucket": "aws_s3_bucket.data.id"
-        })
+        b = _make_node(
+            "aws_s3_bucket_policy.pol", attributes={"bucket": "aws_s3_bucket.data.id"}
+        )
         graph = ResourceGraph.build([a, b])
         assert len(graph.edges) == 1
 
     def test_no_self_reference(self) -> None:
-        a = _make_node("aws_s3_bucket.data", attributes={
-            "ref": "${aws_s3_bucket.data.arn}"
-        })
+        a = _make_node(
+            "aws_s3_bucket.data", attributes={"ref": "${aws_s3_bucket.data.arn}"}
+        )
         graph = ResourceGraph.build([a])
         assert len(graph.edges) == 0
 
     def test_ref_to_unknown_node_ignored(self) -> None:
-        a = _make_node("aws_s3_bucket.data", attributes={
-            "role": "${aws_iam_role.missing.arn}"
-        })
+        a = _make_node(
+            "aws_s3_bucket.data", attributes={"role": "${aws_iam_role.missing.arn}"}
+        )
         graph = ResourceGraph.build([a])
         assert len(graph.edges) == 0
 
     def test_multiple_refs_in_one_attribute(self) -> None:
         a = _make_node("aws_s3_bucket.one")
         b = _make_node("aws_s3_bucket.two")
-        c = _make_node("aws_lambda_function.fn", attributes={
-            "env": "${aws_s3_bucket.one.arn}:${aws_s3_bucket.two.arn}"
-        })
+        c = _make_node(
+            "aws_lambda_function.fn",
+            attributes={"env": "${aws_s3_bucket.one.arn}:${aws_s3_bucket.two.arn}"},
+        )
         graph = ResourceGraph.build([a, b, c])
         assert len(graph.edges) == 2
 
     def test_ref_in_nested_list(self) -> None:
         a = _make_node("aws_security_group.sg")
-        b = _make_node("aws_instance.web", attributes={
-            "vpc_security_group_ids": ["${aws_security_group.sg.id}"]
-        })
+        b = _make_node(
+            "aws_instance.web",
+            attributes={"vpc_security_group_ids": ["${aws_security_group.sg.id}"]},
+        )
         graph = ResourceGraph.build([a, b])
         assert len(graph.edges) == 1
         assert graph.edges[0].kind == EdgeKind.SECURITY_GROUP
 
     def test_ref_in_nested_dict(self) -> None:
         a = _make_node("aws_s3_bucket.logs")
-        b = _make_node("aws_s3_bucket.data", attributes={
-            "logging": {"target_bucket": "${aws_s3_bucket.logs.id}"}
-        })
+        b = _make_node(
+            "aws_s3_bucket.data",
+            attributes={"logging": {"target_bucket": "${aws_s3_bucket.logs.id}"}},
+        )
         graph = ResourceGraph.build([a, b])
         assert len(graph.edges) == 1
 
@@ -207,17 +218,19 @@ class TestGraphEdgeClassification:
 
     def test_security_group_type(self) -> None:
         sg = _make_node("aws_security_group.web")
-        instance = _make_node("aws_instance.app", attributes={
-            "vpc_security_group_ids": ["${aws_security_group.web.id}"]
-        })
+        instance = _make_node(
+            "aws_instance.app",
+            attributes={"vpc_security_group_ids": ["${aws_security_group.web.id}"]},
+        )
         graph = ResourceGraph.build([sg, instance])
         assert graph.edges[0].kind == EdgeKind.SECURITY_GROUP
 
     def test_default_attribute_ref(self) -> None:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "s3_bucket": "${aws_s3_bucket.data.arn}"
-        })
+        b = _make_node(
+            "aws_lambda_function.fn",
+            attributes={"s3_bucket": "${aws_s3_bucket.data.arn}"},
+        )
         graph = ResourceGraph.build([a, b])
         assert graph.edges[0].kind == EdgeKind.ATTRIBUTE_REF
 
@@ -228,18 +241,19 @@ class TestGraphEdgeClassification:
 class TestGraphDependsOn:
     def test_explicit_depends_on(self) -> None:
         a = _make_node("aws_s3_bucket.data")
-        b = _make_node("aws_lambda_function.fn", attributes={
-            "depends_on": ["aws_s3_bucket.data"]
-        })
+        b = _make_node(
+            "aws_lambda_function.fn", attributes={"depends_on": ["aws_s3_bucket.data"]}
+        )
         graph = ResourceGraph.build([a, b])
         deps = [e for e in graph.edges if e.kind == EdgeKind.DEPENDS_ON]
         assert len(deps) == 1
         assert deps[0].target == "aws_s3_bucket.data"
 
     def test_depends_on_missing_target_ignored(self) -> None:
-        a = _make_node("aws_lambda_function.fn", attributes={
-            "depends_on": ["aws_s3_bucket.nonexistent"]
-        })
+        a = _make_node(
+            "aws_lambda_function.fn",
+            attributes={"depends_on": ["aws_s3_bucket.nonexistent"]},
+        )
         graph = ResourceGraph.build([a])
         assert len(graph.edges) == 0
 

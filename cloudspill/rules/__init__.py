@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cloudspill.rules.base import Rule
+from typing import Any
 
 
 class RuleRegistry:
@@ -10,23 +10,28 @@ class RuleRegistry:
 
     def __init__(self, enabled: set[str] | None = None) -> None:
         self._enabled = enabled
-        self._rules: list[Rule] = []
+        self._rules: list[Any] = []
         self._discover()
 
     def _discover(self) -> None:
         """Import rule modules and collect Rule implementations."""
-        from cloudspill.rules.s3 import S3_RULES
-        from cloudspill.rules.iam import IAM_RULES
-        from cloudspill.rules.ec2 import EC2_RULES
-        from cloudspill.rules.rds import RDS_RULES
         from cloudspill.rules.docker import DOCKER_RULES
+        from cloudspill.rules.ec2 import EC2_RULES
+        from cloudspill.rules.iam import IAM_RULES
+        from cloudspill.rules.rds import RDS_RULES
+        from cloudspill.rules.s3 import S3_RULES
 
-        all_rules: list[Rule] = [*S3_RULES, *IAM_RULES, *EC2_RULES, *RDS_RULES, *DOCKER_RULES]
+        all_rules: list[Any] = [
+            *S3_RULES,
+            *IAM_RULES,
+            *EC2_RULES,
+            *RDS_RULES,
+            *DOCKER_RULES,
+        ]
 
         if self._enabled is not None:
             self._rules = [
-                r for r in all_rules
-                if self._rule_category(r.rule_id) in self._enabled
+                r for r in all_rules if self._rule_category(r.rule_id) in self._enabled
             ]
         else:
             self._rules = all_rules
@@ -37,5 +42,5 @@ class RuleRegistry:
         return rule_id.split("-")[0].lower()
 
     @property
-    def rules(self) -> list[Rule]:
+    def rules(self) -> list[Any]:
         return list(self._rules)

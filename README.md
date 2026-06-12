@@ -8,7 +8,7 @@ CloudSpill parses Terraform configurations and Dockerfiles into a typed AST, bui
 
 It is not a regex scanner. It reasons about structure.
 
-![Python](https://img.shields.io/badge/Python-3.6-blue.svg)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 

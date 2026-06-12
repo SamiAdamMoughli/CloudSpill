@@ -16,62 +16,11 @@ heredoc), so both shapes are normalized before inspection.
 
 from __future__ import annotations
 
-import json
-from typing import Any
-
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
+from cloudspill.rules.aws.utils.policy import extract_statements, is_wildcard_principal
 from cloudspill.rules.base import register
-
-
-def _as_statement_list(value: Any) -> list[dict[str, Any]]:
-    """Coerce a policy ``Statement`` field to a list of statement dicts."""
-    items = value if isinstance(value, list) else [value]
-    return [stmt for stmt in items if isinstance(stmt, dict)]
-
-
-def _extract_statements(node: IaCNode) -> list[dict[str, Any]]:
-    """Extract policy statements from the node's ``policy`` attribute.
-
-    Handles a pre-parsed dict, a plain JSON string, and heredoc-wrapped JSON.
-    """
-    policy_raw = node.attributes.get("policy", "")
-
-    if isinstance(policy_raw, dict):
-        return _as_statement_list(policy_raw.get("Statement", []))
-
-    if isinstance(policy_raw, str):
-        cleaned = policy_raw.strip()
-        # Strip heredoc markers (<<EOF / <<-EOF ... EOF).
-        if cleaned.startswith("<<"):
-            first_newline = cleaned.index("\n") if "\n" in cleaned else len(cleaned)
-            cleaned = cleaned[first_newline + 1 :]
-            lines = cleaned.rsplit("\n", 1)
-            if len(lines) == 2 and lines[1].strip().isalpha():
-                cleaned = lines[0]
-            cleaned = cleaned.strip()
-
-        if cleaned.startswith("{"):
-            try:
-                doc = json.loads(cleaned)
-                return _as_statement_list(doc.get("Statement", []))
-            except (json.JSONDecodeError, AttributeError):
-                return []
-
-    return []
-
-
-def _is_wildcard_principal(principal: Any) -> bool:
-    """True if the Principal field grants access to everyone."""
-    if principal == "*":
-        return True
-    if isinstance(principal, dict):
-        for value in principal.values():
-            values = value if isinstance(value, list) else [value]
-            if "*" in values:
-                return True
-    return False
 
 
 @register
@@ -85,12 +34,12 @@ class APIGatewayResourcePolicyWildcard:
         if node.resource_type != "aws_api_gateway_rest_api":
             return []
 
-        for stmt in _extract_statements(node):
+        for stmt in extract_statements(node.attributes.get("policy", "")):
             if stmt.get("Effect") != "Allow":
                 continue
             if stmt.get("Condition"):
                 continue  # a condition constrains the wildcard — common safe pattern
-            if _is_wildcard_principal(stmt.get("Principal")):
+            if is_wildcard_principal(stmt.get("Principal")):
                 return [self._finding(node)]
 
         return []

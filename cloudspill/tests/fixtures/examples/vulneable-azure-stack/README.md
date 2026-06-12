@@ -1,6 +1,3 @@
-Here is the entire markdown document ready to copy and paste:
-
-```markdown
 # Vulnerable Azure Stack — CloudSpill Demo
 
 A deliberately misconfigured Azure infrastructure for demonstrating CloudSpill's static analysis and taint propagation capabilities.

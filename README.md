@@ -11,35 +11,64 @@ It is not a regex scanner. It reasons about structure.
 ![Python](https://img.shields.io/badge/Python-3.6-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-## Installation
+
+## Quickstart
 
 ```bash
+git clone https://github.com/SamiAdamMoughli/CloudSpill
+cd CloudSpill
+
+python3 -m venv .venv
+source .venv/bin/activate
+
 pip install -e ".[dev]"
+
+# Run the test suite
+pytest
+
+# Try it on the bundled fixtures
+cloudspill cloudspill/tests/fixtures/ --show-taint
 ```
 
 ## Usage
 
 ```bash
-# Scan a directory
-cloudspill scan ./infrastructure/
+# Scan a directory or single file
+cloudspill ./infrastructure/
+cloudspill main.tf
 
 # Output formats
-cloudspill scan ./infra --format table       # Rich table (default)
-cloudspill scan ./infra --format json        # Machine-readable
-cloudspill scan ./infra --format markdown    # Report file
+cloudspill ./infra --format table       # Rich table (default)
+cloudspill ./infra --format json        # Machine-readable
+cloudspill ./infra --format markdown    # Report file
 
 # Filter by severity
-cloudspill scan ./infra --min-severity HIGH
+cloudspill ./infra --min-severity HIGH
 
 # Show taint propagation paths
-cloudspill scan ./infra --show-taint
+cloudspill ./infra --show-taint
 
 # Target specific rule sets
-cloudspill scan ./infra --rules s3,iam
+cloudspill ./infra --rules s3,iam
 
-# Exit code 1 if findings above threshold (CI/CD)
-cloudspill scan ./infra --fail-on CRITICAL
+# Exit code 1 if findings at or above this severity (CI/CD)
+cloudspill ./infra --fail-on CRITICAL
 ```
+
+## AI-Enhanced Analysis (in development)
+
+CloudSpill can enrich findings with LLM-generated explanations and remediation patches using a local reasoning model (Qwen3.6-35B-A3B or Gemma 4 31B QAT) served via Ollama, vLLM, or LM Studio.
+
+> ⚠️ This feature is still under active development. The `--ai` flag is functional but the prompt design, output formatting, and model integration are subject to change.
+
+```bash
+# Start your local model server first, then:
+cloudspill ./infra --ai --show-taint
+cloudspill ./infra --ai --model qwen3.6-35b-a3b
+cloudspill ./infra --ai --ai-url http://localhost:1234/v1
+```
+
+If no inference server is reachable, CloudSpill falls back gracefully and continues without AI enrichment.
 
 ## Architecture
 
@@ -48,19 +77,16 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full pipeline design, data model,
 ## Development
 
 ```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
 # Run tests
-pytest
+pytest cloudspill/tests/
 
 # Type checking
 mypy --strict cloudspill/
 
 # Linting
-pylint cloudspill/
-black --check cloudspill/ tests/
-isort --check cloudspill/ tests/
+pylint cloudspill/ --ignore=tests
+black --check cloudspill/
+isort --check --profile black cloudspill/
 
 # Security audit
 bandit -r cloudspill/

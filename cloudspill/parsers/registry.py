@@ -21,4 +21,10 @@ class ParserRegistry:
 
     def parse_all(self, paths: list[Path]) -> list[IaCNode]:
         """Parse every file that has a matching parser. Skip the rest."""
-        raise NotImplementedError
+        nodes: list[IaCNode] = []
+        for path in paths:
+            for parser in self._parsers:
+                if parser.can_parse(path):
+                    nodes.extend(parser.parse(path))
+                    break
+        return nodes

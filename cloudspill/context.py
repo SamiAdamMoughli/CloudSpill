@@ -26,7 +26,7 @@ class ScanConfig:
 
 @dataclass
 class ScanResult:
-    """Immutable output of a complete scan."""
+    """Output of a complete scan."""
 
     findings: list[Finding] = field(default_factory=list)
     taint_results: list[TaintResult] = field(default_factory=list)

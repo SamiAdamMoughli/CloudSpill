@@ -1,0 +1,29 @@
+# DOCKER-003: Unpinned base image
+FROM python:latest
+
+# DOCKER-004: Secrets baked into image layers
+ENV AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+ENV AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+ENV DATABASE_URL=postgresql://admin:SuperSecret123!@db.example.com:5432/appdb
+ENV APP_ENV=production
+
+# DOCKER-006: Unchained RUN instructions — each creates a layer
+RUN apt-get update
+RUN apt-get install -y curl wget netcat-openbsd
+RUN apt-get install -y postgresql-client
+RUN rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# DOCKER-005: ADD instead of COPY for local files
+ADD ./src /app/src
+ADD ./config /app/config
+COPY requirements.txt /app/
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8080
+EXPOSE 5000
+
+# DOCKER-001: No USER instruction — runs as root
+CMD ["python", "src/server.py"]

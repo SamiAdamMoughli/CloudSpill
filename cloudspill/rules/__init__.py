@@ -17,11 +17,17 @@ class RuleRegistry:
         """Import rule modules and collect Rule implementations."""
         from cloudspill.rules.s3 import S3_RULES
         from cloudspill.rules.iam import IAM_RULES
+        from cloudspill.rules.ec2 import EC2_RULES
+        from cloudspill.rules.rds import RDS_RULES
+        from cloudspill.rules.docker import DOCKER_RULES
 
-        all_rules: list[Rule] = [*S3_RULES, *IAM_RULES]
+        all_rules: list[Rule] = [*S3_RULES, *IAM_RULES, *EC2_RULES, *RDS_RULES, *DOCKER_RULES]
 
         if self._enabled is not None:
-            self._rules = [r for r in all_rules if self._rule_category(r.rule_id) in self._emabled]
+            self._rules = [
+                r for r in all_rules
+                if self._rule_category(r.rule_id) in self._enabled
+            ]
         else:
             self._rules = all_rules
 

@@ -353,3 +353,305 @@ class TestIAMFixtureIntegration:
 
     def test_iam_005_found(self, findings: list[Finding]) -> None:
         assert any(f.rule_id == "IAM-005" for f in findings)
+
+
+# ─── EC2 Rules ───────────────────────────────────────────────────────
+
+from cloudspill.rules.ec2 import EC2SSHOpen, EC2OpenIngress, EC2NoIMDSv2, EC2PublicIP
+
+
+class TestEC2SSHOpen:
+    def test_ssh_open_triggers(self) -> None:
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
+        })
+        findings = EC2SSHOpen().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "EC2-001"
+        assert findings[0].severity == Severity.CRITICAL
+
+    def test_ssh_private_clean(self) -> None:
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["10.0.0.0/8"]}]
+        })
+        assert EC2SSHOpen().check(node, _empty_graph()) == []
+
+    def test_ipv6_open_triggers(self) -> None:
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["::/0"]}]
+        })
+        assert len(EC2SSHOpen().check(node, _empty_graph())) == 1
+
+    def test_wrong_resource_skipped(self) -> None:
+        node = _make_node("aws_instance.test", "aws_instance", {
+            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
+        })
+        assert EC2SSHOpen().check(node, _empty_graph()) == []
+
+
+class TestEC2OpenIngress:
+    def test_open_8080_triggers(self) -> None:
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 8080, "to_port": 8080, "cidr_blocks": ["0.0.0.0/0"]}]
+        })
+        findings = EC2OpenIngress().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "EC2-002"
+
+    def test_ssh_not_duplicated(self) -> None:
+        """EC2-002 skips port 22 to avoid overlap with EC2-001."""
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 22, "to_port": 22, "cidr_blocks": ["0.0.0.0/0"]}]
+        })
+        assert EC2OpenIngress().check(node, _empty_graph()) == []
+
+    def test_private_cidr_clean(self) -> None:
+        node = _make_node("aws_security_group.web", "aws_security_group", {
+            "ingress": [{"from_port": 443, "to_port": 443, "cidr_blocks": ["10.0.0.0/8"]}]
+        })
+        assert EC2OpenIngress().check(node, _empty_graph()) == []
+
+
+class TestEC2NoIMDSv2:
+    def test_no_metadata_triggers(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {"ami": "ami-123"})
+        assert len(EC2NoIMDSv2().check(node, _empty_graph())) == 1
+
+    def test_imdsv2_required_clean(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {
+            "metadata_options": {"http_tokens": "required"}
+        })
+        assert EC2NoIMDSv2().check(node, _empty_graph()) == []
+
+    def test_imdsv1_optional_triggers(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {
+            "metadata_options": {"http_tokens": "optional"}
+        })
+        assert len(EC2NoIMDSv2().check(node, _empty_graph())) == 1
+
+
+class TestEC2PublicIP:
+    def test_public_ip_triggers(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {
+            "associate_public_ip_address": True
+        })
+        findings = EC2PublicIP().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "EC2-004"
+
+    def test_no_public_ip_clean(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {
+            "associate_public_ip_address": False
+        })
+        assert EC2PublicIP().check(node, _empty_graph()) == []
+
+    def test_missing_attribute_clean(self) -> None:
+        node = _make_node("aws_instance.web", "aws_instance", {})
+        assert EC2PublicIP().check(node, _empty_graph()) == []
+
+
+# ─── RDS Rules ───────────────────────────────────────────────────────
+
+from cloudspill.rules.rds import (
+    RDSPubliclyAccessible, RDSNoEncryption, RDSNoDeletionProtection, RDSNoBackups,
+)
+
+
+class TestRDSPubliclyAccessible:
+    def test_public_triggers(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "publicly_accessible": True
+        })
+        findings = RDSPubliclyAccessible().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "RDS-001"
+        assert findings[0].severity == Severity.CRITICAL
+
+    def test_private_clean(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "publicly_accessible": False
+        })
+        assert RDSPubliclyAccessible().check(node, _empty_graph()) == []
+
+    def test_rds_cluster_also_caught(self) -> None:
+        node = _make_node("aws_rds_cluster.db", "aws_rds_cluster", {
+            "publicly_accessible": True
+        })
+        assert len(RDSPubliclyAccessible().check(node, _empty_graph())) == 1
+
+
+class TestRDSNoEncryption:
+    def test_no_encryption_triggers(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {})
+        assert len(RDSNoEncryption().check(node, _empty_graph())) == 1
+
+    def test_encrypted_clean(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "storage_encrypted": True
+        })
+        assert RDSNoEncryption().check(node, _empty_graph()) == []
+
+
+class TestRDSNoDeletionProtection:
+    def test_no_protection_triggers(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {})
+        assert len(RDSNoDeletionProtection().check(node, _empty_graph())) == 1
+
+    def test_protected_clean(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "deletion_protection": True
+        })
+        assert RDSNoDeletionProtection().check(node, _empty_graph()) == []
+
+
+class TestRDSNoBackups:
+    def test_zero_retention_triggers(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "backup_retention_period": 0
+        })
+        findings = RDSNoBackups().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "RDS-004"
+
+    def test_positive_retention_clean(self) -> None:
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {
+            "backup_retention_period": 7
+        })
+        assert RDSNoBackups().check(node, _empty_graph()) == []
+
+    def test_missing_retention_clean(self) -> None:
+        """AWS defaults to 1 day — no finding if not set."""
+        node = _make_node("aws_db_instance.db", "aws_db_instance", {})
+        assert RDSNoBackups().check(node, _empty_graph()) == []
+
+
+# ─── Docker Rules ────────────────────────────────────────────────────
+
+from cloudspill.parsers.docker import DockerfileParser as DParser
+from cloudspill.rules.docker import (
+    DockerRootUser, DockerNoUserInstruction, DockerLatestTag,
+    DockerSecretInEnv, DockerAddInsteadOfCopy, DockerUnchainedRun,
+)
+
+
+class TestDockerRootUser:
+    def test_explicit_root_triggers(self) -> None:
+        node = _make_node("dockerfile.d.USER.0", "USER", {"user": "root"})
+        assert len(DockerRootUser().check(node, _empty_graph())) == 1
+
+    def test_nonroot_user_clean(self) -> None:
+        node = _make_node("dockerfile.d.USER.0", "USER", {"user": "nobody"})
+        assert DockerRootUser().check(node, _empty_graph()) == []
+
+
+class TestDockerNoUserInstruction:
+    def test_no_user_triggers(self) -> None:
+        from_node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"})
+        graph = ResourceGraph.build([from_node])
+        findings = DockerNoUserInstruction().check(from_node, graph)
+        assert len(findings) == 1
+
+    def test_user_present_clean(self) -> None:
+        from_node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12"})
+        user_node = IaCNode(
+            node_id="dockerfile.d.USER.0", node_type="instruction",
+            resource_type="USER", name="USER nobody",
+            attributes={"user": "nobody"}, children=(),
+            source_file="test.tf", line=10,
+        )
+        graph = ResourceGraph.build([from_node, user_node])
+        assert DockerNoUserInstruction().check(from_node, graph) == []
+
+
+class TestDockerLatestTag:
+    def test_latest_triggers(self) -> None:
+        node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "latest"})
+        findings = DockerLatestTag().check(node, _empty_graph())
+        assert len(findings) == 1
+        assert findings[0].rule_id == "DOCKER-003"
+
+    def test_pinned_clean(self) -> None:
+        node = _make_node("dockerfile.d.FROM.0", "FROM", {"image": "python", "tag": "3.12-slim"})
+        assert DockerLatestTag().check(node, _empty_graph()) == []
+
+
+class TestDockerSecretInEnv:
+    def test_aws_key_triggers(self) -> None:
+        node = _make_node("dockerfile.d.ENV.0", "ENV", {
+            "AWS_SECRET_ACCESS_KEY": "AKIAIOSFODNN7EXAMPLE"
+        })
+        assert len(DockerSecretInEnv().check(node, _empty_graph())) == 1
+
+    def test_db_url_triggers(self) -> None:
+        node = _make_node("dockerfile.d.ENV.0", "ENV", {
+            "DATABASE_URL": "postgresql://admin:secret@db:5432/prod"
+        })
+        assert len(DockerSecretInEnv().check(node, _empty_graph())) == 1
+
+    def test_safe_env_clean(self) -> None:
+        node = _make_node("dockerfile.d.ENV.0", "ENV", {"APP_NAME": "cloudspill"})
+        assert DockerSecretInEnv().check(node, _empty_graph()) == []
+
+
+class TestDockerAddInsteadOfCopy:
+    def test_local_add_triggers(self) -> None:
+        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "./app", "dst": "/opt/app"})
+        assert len(DockerAddInsteadOfCopy().check(node, _empty_graph())) == 1
+
+    def test_url_add_clean(self) -> None:
+        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "https://example.com/file.tar.gz", "dst": "/opt"})
+        assert DockerAddInsteadOfCopy().check(node, _empty_graph()) == []
+
+    def test_tar_add_clean(self) -> None:
+        node = _make_node("dockerfile.d.ADD.0", "ADD", {"src": "archive.tar.gz", "dst": "/opt"})
+        assert DockerAddInsteadOfCopy().check(node, _empty_graph()) == []
+
+
+class TestDockerUnchainedRun:
+    def test_three_runs_triggers(self) -> None:
+        runs = [
+            _make_node(f"dockerfile.d.RUN.{i}", "RUN", {"command": f"cmd{i}"})
+            for i in range(3)
+        ]
+        graph = ResourceGraph.build(runs)
+        # Only fires on the first RUN
+        assert len(DockerUnchainedRun().check(runs[0], graph)) == 1
+        assert DockerUnchainedRun().check(runs[1], graph) == []
+
+    def test_two_runs_clean(self) -> None:
+        runs = [
+            _make_node(f"dockerfile.d.RUN.{i}", "RUN", {"command": f"cmd{i}"})
+            for i in range(2)
+        ]
+        graph = ResourceGraph.build(runs)
+        assert DockerUnchainedRun().check(runs[0], graph) == []
+
+
+# ─── Docker Fixture Integration ─────────────────────────────────────
+
+
+class TestDockerFixtureIntegration:
+    @pytest.fixture()
+    def findings(self) -> list[Finding]:
+        nodes = DParser().parse(FIXTURES / "Dockerfile.vulnerable")
+        graph = ResourceGraph.build(nodes)
+        return RuleEngine(RuleRegistry(enabled={"docker"})).evaluate(nodes, graph)
+
+    def test_docker_001_found(self, findings: list[Finding]) -> None:
+        assert any(f.rule_id == "DOCKER-001" for f in findings)
+
+    def test_docker_003_found(self, findings: list[Finding]) -> None:
+        assert any(f.rule_id == "DOCKER-003" for f in findings)
+
+    def test_docker_004_found(self, findings: list[Finding]) -> None:
+        assert any(f.rule_id == "DOCKER-004" for f in findings)
+
+    def test_docker_005_found(self, findings: list[Finding]) -> None:
+        assert any(f.rule_id == "DOCKER-005" for f in findings)
+
+    def test_docker_006_found(self, findings: list[Finding]) -> None:
+        assert any(f.rule_id == "DOCKER-006" for f in findings)
+
+    def test_secrets_detected_count(self, findings: list[Finding]) -> None:
+        secrets = [f for f in findings if f.rule_id == "DOCKER-004"]
+        assert len(secrets) == 2  # AWS key + DATABASE_URL

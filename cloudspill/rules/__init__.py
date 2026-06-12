@@ -15,7 +15,20 @@ class RuleRegistry:
 
     def _discover(self) -> None:
         """Import rule modules and collect Rule implementations."""
-        raise NotImplementedError
+        from cloudspill.rules.s3 import S3_RULES
+        from cloudspill.rules.iam import IAM_RULES
+
+        all_rules: list[Rule] = [*S3_RULES, *IAM_RULES]
+
+        if self._enabled is not None:
+            self._rules = [r for r in all_rules if self._rule_category(r.rule_id) in self._emabled]
+        else:
+            self._rules = all_rules
+
+    @staticmethod
+    def _rule_category(rule_id: str) -> str:
+        """Extract category from rule ID: 'S3-001' → 's3'."""
+        return rule_id.split("-")[0].lower()
 
     @property
     def rules(self) -> list[Rule]:

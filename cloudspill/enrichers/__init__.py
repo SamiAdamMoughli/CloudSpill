@@ -3,3 +3,5 @@
 from cloudspill.enrichers.base import Enricher
 
 __all__ = ["Enricher"]
+
+# NOTE: Public API: get_enricher(config)

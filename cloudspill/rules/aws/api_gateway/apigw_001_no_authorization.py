@@ -34,72 +34,62 @@ class APIGatewayNoAuthorization:
 
     def check(self, node: IaCNode, graph: ResourceGraph) -> list[Finding]:
         if node.resource_type == "aws_api_gateway_method":
-            return self._check_rest_method(node)
+            if not self._is_rest_method_open(node):
+                return []
+            target = str(node.attributes.get("http_method", "")) or "?"
+            return [self._finding(node, kind="method", target=target)]
+
         if node.resource_type == "aws_apigatewayv2_route":
-            return self._check_http_route(node)
+            if not self._is_http_route_open(node):
+                return []
+            target = str(node.attributes.get("route_key", "")) or "?"
+            return [self._finding(node, kind="route", target=target)]
+
         return []
 
-    def _check_rest_method(self, node: IaCNode) -> list[Finding]:
-        """REST API (v1): ``authorization`` attribute on aws_api_gateway_method."""
-        http_method = str(node.attributes.get("http_method", "")).upper()
-        if http_method == _PREFLIGHT_METHOD:
-            return []  # CORS preflight is unauthenticated by design
+    @staticmethod
+    def _is_rest_method_open(node: IaCNode) -> bool:
+        """REST API (v1): authorization is NONE and not a CORS preflight method."""
+        if str(node.attributes.get("http_method", "")).upper() == _PREFLIGHT_METHOD:
+            return False  # CORS preflight is unauthenticated by design
+        return str(node.attributes.get("authorization", "")).upper() in _NO_AUTH
 
-        authorization = str(node.attributes.get("authorization", "")).upper()
-        if authorization not in _NO_AUTH:
-            return []
-
-        return [
-            Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title=f"API Gateway method {http_method or '?'} requires no authorization",
-                description=(
-                    "authorization is NONE on this aws_api_gateway_method. "
-                    "The method is callable by any anonymous client over the internet."
-                ),
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-                remediation=(
-                    'Set authorization to "AWS_IAM", "COGNITO_USER_POOLS", or '
-                    '"CUSTOM" (with an authorizer_id), or require an API key.'
-                ),
-                tags=frozenset(
-                    {"api-gateway", "authentication", "public-access", "aws"}
-                ),
-            )
-        ]
-
-    def _check_http_route(self, node: IaCNode) -> list[Finding]:
-        """HTTP/WebSocket API (v2): ``authorization_type`` on aws_apigatewayv2_route."""
+    @staticmethod
+    def _is_http_route_open(node: IaCNode) -> bool:
+        """HTTP/WebSocket API (v2): authorization_type is NONE, not an OPTIONS route."""
         route_key = str(node.attributes.get("route_key", ""))
-        # The $default route and explicit OPTIONS routes are commonly public.
         if route_key.upper().startswith(_PREFLIGHT_METHOD):
-            return []
+            return False
+        return str(node.attributes.get("authorization_type", "")).upper() in _NO_AUTH
 
-        authorization = str(node.attributes.get("authorization_type", "")).upper()
-        if authorization not in _NO_AUTH:
-            return []
-
-        return [
-            Finding(
-                rule_id=self.rule_id,
-                severity=self.severity,
-                title=f"API Gateway route {route_key or '?'} requires no authorization",
-                description=(
-                    "authorization_type is NONE on this aws_apigatewayv2_route. "
-                    "The route is callable by any anonymous client over the internet."
-                ),
-                resource=node.node_id,
-                file=node.source_file,
-                line=node.line,
-                remediation=(
-                    'Set authorization_type to "AWS_IAM", "JWT", or "CUSTOM" '
-                    "and attach the appropriate authorizer_id."
-                ),
-                tags=frozenset(
-                    {"api-gateway", "authentication", "public-access", "aws"}
-                ),
+    def _finding(self, node: IaCNode, kind: str, target: str) -> Finding:
+        """Build the finding for an unauthenticated method (v1) or route (v2)."""
+        if kind == "method":
+            attr, resource_type = "authorization", "aws_api_gateway_method"
+            remediation = (
+                'Set authorization to "AWS_IAM", "COGNITO_USER_POOLS", or '
+                '"CUSTOM" (with an authorizer_id), or require an API key.'
             )
-        ]
+        else:
+            attr, resource_type = "authorization_type", "aws_apigatewayv2_route"
+            remediation = (
+                'Set authorization_type to "AWS_IAM", "JWT", or "CUSTOM" '
+                "and attach the appropriate authorizer_id."
+            )
+
+        return Finding(
+            rule_id=self.rule_id,
+            severity=self.severity,
+            title=f"API Gateway {kind} {target} requires no authorization",
+            description=(
+                f"{attr} is NONE on this {resource_type}. "
+                f"The {kind} is callable by any anonymous client over the internet."
+            ),
+            resource=node.node_id,
+            file=node.source_file,
+            line=node.line,
+            remediation=remediation,
+            tags=frozenset(
+                {"api-gateway", "authentication", "public-access", "aws"}
+            ),
+        )

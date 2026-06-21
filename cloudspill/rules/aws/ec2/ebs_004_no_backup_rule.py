@@ -52,9 +52,7 @@ class EBSVolumeNoBackup:
                     "Add the volume's ARN to an aws_backup_selection tied to a "
                     "backup plan with an appropriate schedule and retention."
                 ),
-                tags=frozenset(
-                    {"ebs", "backup", "resilience", "recovery", "aws"}
-                ),
+                tags=frozenset({"ebs", "backup", "resilience", "recovery", "aws"}),
             )
         ]
 

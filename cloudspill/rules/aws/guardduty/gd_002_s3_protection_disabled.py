@@ -30,9 +30,9 @@ class GuardDutyS3ProtectionDisabled:
     severity = Severity.MEDIUM
 
     def check(self, node: IaCNode, graph: ResourceGraph) -> list[Finding]:
-        if detector_feature_disabled(node, "S3_DATA_EVENTS") or legacy_datasource_disabled(
-            node, "s3_logs"
-        ):
+        if detector_feature_disabled(
+            node, "S3_DATA_EVENTS"
+        ) or legacy_datasource_disabled(node, "s3_logs"):
             return [self._finding(node)]
         return []
 

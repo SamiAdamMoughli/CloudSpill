@@ -35,18 +35,15 @@ For a brand-new **service or cloud**, also:
 cloudspill/rules/
 ├── __init__.py          # RuleRegistry — auto-discovery, no edits needed per rule
 ├── base.py              # @register decorator + Rule protocol
-├── aws/
-│   ├── __init__.py      # REQUIRED package marker
-│   ├── s3/
-│   │   ├── __init__.py  # service docstring + rule table
-│   │   ├── s3_001_public_acl.py
-│   │   └── ...
-│   └── api_gateway/
-│       └── ...
-├── azure/
-│   └── ...
-└── docker/
-    └── ...
+└── aws/
+    ├── __init__.py      # REQUIRED package marker
+    ├── utils/           # shared helpers (hcl.py, policy.py)
+    ├── s3/
+    │   ├── __init__.py  # service docstring + rule table
+    │   ├── s3_001_public_acl.py
+    │   └── ...
+    └── api_gateway/
+        └── ...
 ```
 
 One rule per file. The filename uses lowercase with an underscore-separated
@@ -220,7 +217,7 @@ discoverability:
 
 ```python
 # cloudspill/cli.py
-_RULE_CHOICES = "s3,iam,ec2,rds,docker,az,apigw"   # add your category
+_RULE_CHOICES = "s3,iam,ec2,rds,vpc,kms,apigw"   # add your category
 ```
 
 This is cosmetic (help output only); skip it for a rule in an existing
@@ -230,8 +227,8 @@ service.
 
 Tests live in `tests/` (repo root, **not** inside the package). Fixtures live
 in `tests/fixtures/`. Follow the existing pattern (see
-[`tests/test_rules.py`](../../tests/test_rules.py) and
-[`tests/test_azure_rules.py`](../../tests/test_azure_rules.py)):
+[`tests/test_apigw_rules.py`](../../tests/test_apigw_rules.py) and
+[`tests/test_cloudfront_rules.py`](../../tests/test_cloudfront_rules.py)):
 
 1. Add a **vulnerable** fixture that should trigger exactly one finding and a
    **clean** fixture that should trigger none.
@@ -269,9 +266,9 @@ pytest tests/ -q
 
 ## 9. Update the README
 
-[`README.md`](../../README.md) advertises a rule count and a coverage list
-(e.g. "36+ rules — AWS (S3, IAM, EC2, RDS, Docker) and Azure (...)"). Keep
-these honest when you add rules or a new service.
+[`README.md`](../../README.md) advertises a rule count and a per-service
+coverage list (e.g. "130+ AWS rules across 14 services: ..."). Keep these
+honest when you add rules or a new service.
 
 ## 10. Sanity-check end to end
 

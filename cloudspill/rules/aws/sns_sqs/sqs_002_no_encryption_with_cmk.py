@@ -48,8 +48,6 @@ class SQSNoCmkEncryption:
                     "Set kms_master_key_id to a customer-managed KMS key for "
                     "SSE-KMS encryption of the queue."
                 ),
-                tags=frozenset(
-                    {"sqs", "encryption", "kms", "cmk", "aws"}
-                ),
+                tags=frozenset({"sqs", "encryption", "kms", "cmk", "aws"}),
             )
         ]

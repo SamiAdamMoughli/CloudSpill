@@ -26,7 +26,10 @@ _OPEN_CIDRS = frozenset({"0.0.0.0/0", "::/0"})
 def _is_wildcard_allow(entry: dict[str, Any], *, egress: bool | None) -> bool:
     if egress is not None and bool(entry.get("egress")) != egress:
         return False
-    if str(entry.get("rule_action", entry.get("action", ""))).strip().lower() != "allow":
+    if (
+        str(entry.get("rule_action", entry.get("action", ""))).strip().lower()
+        != "allow"
+    ):
         return False
     if str(entry.get("protocol", "")).strip() not in ("-1", "all"):
         return False
@@ -71,7 +74,5 @@ class VPCNaclWildcardIngress:
                 "Restrict the NACL ingress to the protocols, ports, and source "
                 "CIDRs the subnet actually needs; deny everything else."
             ),
-            tags=frozenset(
-                {"vpc", "network-acl", "ingress", "public-access", "aws"}
-            ),
+            tags=frozenset({"vpc", "network-acl", "ingress", "public-access", "aws"}),
         )

@@ -53,8 +53,6 @@ class EC2TerminationProtectionDisabled:
                     "Set disable_api_termination = true on instances whose loss "
                     "would be disruptive or hard to recover from."
                 ),
-                tags=frozenset(
-                    {"ec2", "termination-protection", "resilience", "aws"}
-                ),
+                tags=frozenset({"ec2", "termination-protection", "resilience", "aws"}),
             )
         ]

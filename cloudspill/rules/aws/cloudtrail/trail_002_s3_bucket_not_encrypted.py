@@ -52,8 +52,6 @@ class CloudTrailLogsNotKmsEncrypted:
                     "policy grants CloudTrail kms:GenerateDataKey* and restricts "
                     "kms:Decrypt to the principals allowed to read the logs."
                 ),
-                tags=frozenset(
-                    {"cloudtrail", "encryption", "kms", "audit", "aws"}
-                ),
+                tags=frozenset({"cloudtrail", "encryption", "kms", "audit", "aws"}),
             )
         ]

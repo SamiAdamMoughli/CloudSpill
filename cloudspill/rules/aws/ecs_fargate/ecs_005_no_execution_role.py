@@ -54,8 +54,6 @@ class ECSNoExecutionRole:
                     "AmazonECSTaskExecutionRolePolicy permissions plus access to "
                     "the specific secrets the task needs."
                 ),
-                tags=frozenset(
-                    {"ecs", "fargate", "iam", "execution-role", "aws"}
-                ),
+                tags=frozenset({"ecs", "fargate", "iam", "execution-role", "aws"}),
             )
         ]

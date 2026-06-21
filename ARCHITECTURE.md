@@ -36,16 +36,16 @@ bastion-project/
 │   │   ├── __init__.py
 │   │   ├── base.py             # Parser Protocol
 │   │   ├── terraform.py        # HCL → IaCNode tree
-│   │   ├── dockerfile.py       # Dockerfile → IaCNode tree
+│   │   ├── docker.py           # Dockerfile → IaCNode tree
 │   │   └── registry.py         # ParserRegistry: file extension → parser
 │   ├── rules/
 │   │   ├── __init__.py         # RuleRegistry: collects + exposes all rules
-│   │   ├── base.py             # Rule Protocol
-│   │   ├── s3.py
-│   │   ├── iam.py
-│   │   ├── ec2.py
-│   │   ├── rds.py
-│   │   └── docker.py
+│   │   ├── base.py             # Rule Protocol + @register decorator
+│   │   └── aws/                # modular, per-service rule packages
+│   │       ├── utils/          # shared helpers (hcl.py, policy.py)
+│   │       ├── s3/  iam/  ec2/  rds/  vpc/  kms/  lambda_svc/
+│   │       ├── dynamodb/  ecs_fargate/  cloudfront/  api_gateway/
+│   │       └── cloudtrail/  sns_sqs/  secrets_manager/  guardduty/  organizations/
 │   ├── engine/
 │   │   ├── __init__.py
 │   │   ├── rule_engine.py      # Walks nodes × rules → list[Finding]

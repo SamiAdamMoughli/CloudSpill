@@ -61,9 +61,7 @@ class EBSSnapshotPublicAccess:
                     "Remove the 'all' group grant and share only with specific, "
                     "trusted account IDs (or keep the image private)."
                 ),
-                tags=frozenset(
-                    {"ebs", "ami", "snapshot", "public-access", "aws"}
-                ),
+                tags=frozenset({"ebs", "ami", "snapshot", "public-access", "aws"}),
             )
         ]
 

@@ -85,7 +85,5 @@ class CloudFrontCacheKeyMissingHostHeader:
                 "origins, or migrate the behavior to a cache_policy_id whose cache "
                 "key includes the Host header."
             ),
-            tags=frozenset(
-                {"cloudfront", "caching", "cache-poisoning", "aws"}
-            ),
+            tags=frozenset({"cloudfront", "caching", "cache-poisoning", "aws"}),
         )

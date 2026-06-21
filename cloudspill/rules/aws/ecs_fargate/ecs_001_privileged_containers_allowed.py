@@ -62,7 +62,5 @@ class ECSPrivilegedContainer:
                 "Remove privileged (set it false) and grant only the specific "
                 "Linux capabilities the workload needs via linuxParameters."
             ),
-            tags=frozenset(
-                {"ecs", "fargate", "privileged", "container-escape", "aws"}
-            ),
+            tags=frozenset({"ecs", "fargate", "privileged", "container-escape", "aws"}),
         )

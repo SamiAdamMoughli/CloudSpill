@@ -85,7 +85,7 @@ def covers_port(entry: dict[str, Any], port: int) -> bool:
         return True  # all ports
     if fp is None or tp is None:
         return port in (fp, tp)
-    return fp <= port <= tp
+    return bool(fp <= port <= tp)
 
 
 @register
@@ -121,7 +121,5 @@ class EC2SSHOpen:
                 "Restrict the SSH ingress CIDR to a bastion/VPN range, or remove "
                 "it entirely and use SSM Session Manager for shell access."
             ),
-            tags=frozenset(
-                {"ec2", "security-group", "ssh", "public-access", "aws"}
-            ),
+            tags=frozenset({"ec2", "security-group", "ssh", "public-access", "aws"}),
         )

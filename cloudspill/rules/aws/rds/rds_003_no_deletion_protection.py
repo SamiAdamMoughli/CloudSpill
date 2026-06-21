@@ -52,9 +52,7 @@ class RDSNoDeletionProtection:
                 resource=node.node_id,
                 file=node.source_file,
                 line=node.line,
-                remediation=(
-                    "Set deletion_protection = true on production databases."
-                ),
+                remediation=("Set deletion_protection = true on production databases."),
                 tags=frozenset(
                     {"rds", "deletion-protection", "resilience", "database", "aws"}
                 ),

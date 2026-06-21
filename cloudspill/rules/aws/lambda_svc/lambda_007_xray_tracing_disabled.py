@@ -40,7 +40,7 @@ class LambdaXrayTracingDisabled:
                 severity=self.severity,
                 title="Lambda function does not have active X-Ray tracing",
                 description=(
-                    "tracing_config mode is not \"Active\" on this "
+                    'tracing_config mode is not "Active" on this '
                     "aws_lambda_function, so X-Ray traces are not emitted for every "
                     "invocation, reducing latency visibility and incident-response "
                     "context."
@@ -52,8 +52,6 @@ class LambdaXrayTracingDisabled:
                     'Add tracing_config { mode = "Active" } (and grant the '
                     "execution role X-Ray write permissions)."
                 ),
-                tags=frozenset(
-                    {"lambda", "x-ray", "tracing", "observability", "aws"}
-                ),
+                tags=frozenset({"lambda", "x-ray", "tracing", "observability", "aws"}),
             )
         ]

@@ -63,8 +63,6 @@ class SQSShortMessageRetention:
                     "Raise message_retention_seconds to a value that tolerates "
                     "consumer downtime (the default is 4 days; the maximum is 14)."
                 ),
-                tags=frozenset(
-                    {"sqs", "message-retention", "resilience", "aws"}
-                ),
+                tags=frozenset({"sqs", "message-retention", "resilience", "aws"}),
             )
         ]

@@ -20,7 +20,7 @@
 
 ## iac-bench Naming Convention
 
-All benchmark fixture stacks under `cloudspill/tests/fixtures/examples/` follow
+All benchmark fixture stacks under `tests/fixtures/examples/` follow
 a deterministic, machine-parseable naming scheme so the dataset is reproducible,
 versionable, and filterable — and never confusable with real production systems.
 
@@ -59,7 +59,7 @@ static HCL reader — it does not resolve `module` blocks or evaluate
 toggle" design would produce zero findings. Instead the parameterization lives
 at generation time:
 
-- `cloudspill/tests/fixtures/examples/_base_framework/render.py` holds one
+- `tests/fixtures/examples/_base_framework/render.py` holds one
   canonical, secure-by-default baseline plus the case manifest (`CASES`).
 - Each case renders a fully self-contained, deployable stack that is secure
   everywhere except the single control it targets, which is baked in as a
@@ -77,8 +77,8 @@ Each stack must produce **exactly one finding**. To add a case:
 3. Regenerate and verify a single matching finding:
 
    ```bash
-   python cloudspill/tests/fixtures/examples/_base_framework/render.py
-   cloudspill cloudspill/tests/fixtures/examples/<your-case> --format json
+   python tests/fixtures/examples/_base_framework/render.py
+   cloudspill tests/fixtures/examples/<your-case> --format json
    ```
 
 ## Quality Gates

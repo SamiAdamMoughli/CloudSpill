@@ -53,8 +53,6 @@ class LambdaVpcNotConfigured:
                     "functions that access internal resources, so they run under "
                     "your network controls."
                 ),
-                tags=frozenset(
-                    {"lambda", "vpc", "network-segmentation", "aws"}
-                ),
+                tags=frozenset({"lambda", "vpc", "network-segmentation", "aws"}),
             )
         ]

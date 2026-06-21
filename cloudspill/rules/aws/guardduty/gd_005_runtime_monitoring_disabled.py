@@ -46,7 +46,7 @@ class GuardDutyRuntimeMonitoringDisabled:
             file=node.source_file,
             line=node.line,
             remediation=(
-                'Enable the RUNTIME_MONITORING detector feature (status = '
+                "Enable the RUNTIME_MONITORING detector feature (status = "
                 '"ENABLED") and deploy the GuardDuty agent to your workloads.'
             ),
             tags=frozenset(

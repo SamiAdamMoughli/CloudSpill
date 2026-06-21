@@ -64,7 +64,9 @@ class CloudFrontOriginAccessIdentityMissing:
         if "custom_origin_config" in origin:
             return False
         domain = str(origin.get("domain_name", "")).lower()
-        return ".s3." in domain or ".s3-" in domain or domain.endswith("s3.amazonaws.com")
+        return (
+            ".s3." in domain or ".s3-" in domain or domain.endswith("s3.amazonaws.com")
+        )
 
     @staticmethod
     def _is_protected(origin: dict[str, Any]) -> bool:
@@ -98,7 +100,5 @@ class CloudFrontOriginAccessIdentityMissing:
                 "s3_origin_config.origin_access_identity), then make the bucket "
                 "private and grant read access only to CloudFront."
             ),
-            tags=frozenset(
-                {"cloudfront", "s3", "origin", "public-access", "aws"}
-            ),
+            tags=frozenset({"cloudfront", "s3", "origin", "public-access", "aws"}),
         )

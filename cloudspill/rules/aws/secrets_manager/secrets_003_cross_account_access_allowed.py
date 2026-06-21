@@ -12,6 +12,8 @@ statement with a wildcard or cross-account principal and no Condition.
 
 from __future__ import annotations
 
+from typing import Any
+
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
@@ -19,7 +21,7 @@ from cloudspill.rules.aws.utils.policy import extract_statements, is_wildcard_pr
 from cloudspill.rules.base import register
 
 
-def _principal_arns(stmt: dict) -> list[str]:
+def _principal_arns(stmt: dict[str, Any]) -> list[str]:
     principal = stmt.get("Principal")
     if isinstance(principal, dict):
         aws = principal.get("AWS")
@@ -27,7 +29,7 @@ def _principal_arns(stmt: dict) -> list[str]:
     return []
 
 
-def _is_cross_account(stmt: dict) -> bool:
+def _is_cross_account(stmt: dict[str, Any]) -> bool:
     return any(p.startswith("arn:aws:iam::") for p in _principal_arns(stmt))
 
 
@@ -68,6 +70,12 @@ class SecretsCrossAccountAccess:
                 "cross-account access."
             ),
             tags=frozenset(
-                {"secrets-manager", "resource-policy", "cross-account", "public-access", "aws"}
+                {
+                    "secrets-manager",
+                    "resource-policy",
+                    "cross-account",
+                    "public-access",
+                    "aws",
+                }
             ),
         )

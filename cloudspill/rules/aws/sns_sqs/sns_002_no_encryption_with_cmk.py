@@ -49,8 +49,6 @@ class SNSNoCmkEncryption:
                     "Set kms_master_key_id to a customer-managed KMS key for "
                     "server-side encryption of the topic."
                 ),
-                tags=frozenset(
-                    {"sns", "encryption", "kms", "cmk", "aws"}
-                ),
+                tags=frozenset({"sns", "encryption", "kms", "cmk", "aws"}),
             )
         ]

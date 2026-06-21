@@ -52,11 +52,9 @@ class ECSNoLogConfiguration:
             file=node.source_file,
             line=node.line,
             remediation=(
-                "Add a logConfiguration (e.g. logDriver = \"awslogs\" with the "
+                'Add a logConfiguration (e.g. logDriver = "awslogs" with the '
                 "awslogs-group/region/stream-prefix options, or awsfirelens) to "
                 "the container."
             ),
-            tags=frozenset(
-                {"ecs", "fargate", "logging", "observability", "aws"}
-            ),
+            tags=frozenset({"ecs", "fargate", "logging", "observability", "aws"}),
         )

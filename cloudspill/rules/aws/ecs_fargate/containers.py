@@ -41,7 +41,9 @@ def parse_container_definitions(value: Any) -> list[dict[str, Any]]:
     except json.JSONDecodeError:
         return []
 
-    return [c for c in parsed if isinstance(c, dict)] if isinstance(parsed, list) else []
+    return (
+        [c for c in parsed if isinstance(c, dict)] if isinstance(parsed, list) else []
+    )
 
 
 def _strip_heredoc(text: str) -> str:

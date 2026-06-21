@@ -42,7 +42,7 @@ class EC2NoIMDSv2:
                 severity=self.severity,
                 title="IMDSv2 is not required (instance metadata is exploitable via SSRF)",
                 description=(
-                    "metadata_options does not set http_tokens = \"required\", so "
+                    'metadata_options does not set http_tokens = "required", so '
                     "IMDSv1 remains enabled. An SSRF flaw in any app on the "
                     "instance can read the instance role's temporary credentials "
                     "from the metadata endpoint."
@@ -52,11 +52,9 @@ class EC2NoIMDSv2:
                 line=node.line,
                 remediation=(
                     'Set metadata_options { http_tokens = "required" } (and '
-                    "http_endpoint = \"enabled\") to enforce IMDSv2 session tokens."
+                    'http_endpoint = "enabled") to enforce IMDSv2 session tokens.'
                 ),
-                tags=frozenset(
-                    {"ec2", "imdsv2", "ssrf", "credential-theft", "aws"}
-                ),
+                tags=frozenset({"ec2", "imdsv2", "ssrf", "credential-theft", "aws"}),
             )
         ]
 

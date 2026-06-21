@@ -53,7 +53,13 @@ class VPCNoS3DdbEndpoint:
                     "tables."
                 ),
                 tags=frozenset(
-                    {"vpc", "vpc-endpoint", "data-exfiltration", "private-network", "aws"}
+                    {
+                        "vpc",
+                        "vpc-endpoint",
+                        "data-exfiltration",
+                        "private-network",
+                        "aws",
+                    }
                 ),
             )
         ]

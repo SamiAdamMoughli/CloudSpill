@@ -72,7 +72,7 @@ class EC2InstanceProfileOverpermissive:
                 remediation=(
                     "Scope the role's policies to the specific actions and "
                     "resources the workload needs; never attach AdministratorAccess "
-                    "or Action \"*\"/Resource \"*\" to an instance profile role."
+                    'or Action "*"/Resource "*" to an instance profile role.'
                 ),
                 tags=frozenset(
                     {"ec2", "iam", "privilege-escalation", "instance-profile", "aws"}

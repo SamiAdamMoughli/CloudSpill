@@ -5,13 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cloudspill"
 version = "0.1.0"
+description = "Static Application Security Testing engine for Infrastructure-as-Code (Terraform / AWS)"
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Sami Adam Moughli" }]
 requires-python = ">=3.12"
+keywords = ["security", "sast", "terraform", "iac", "aws", "static-analysis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = [
     "python-hcl2>=4.0",
     "rich>=13.0",
     "click>=8.0",
     "httpx>=0.27",
 ]
+
+[project.urls]
+Homepage = "https://github.com/SamiAdamMoughli/CloudSpill"
+Repository = "https://github.com/SamiAdamMoughli/CloudSpill"
+Issues = "https://github.com/SamiAdamMoughli/CloudSpill/issues"
 
 [project.optional-dependencies]
 ai = [
@@ -42,4 +60,25 @@ ignore_missing_imports = true
 profile = "black"
 
 [tool.pylint.messages_control]
-disable = ["C0114", "C0115", "C0116"]
+# Disabled to match this codebase's protocol-based rule architecture and let
+# black own formatting:
+#   C0114/C0115/C0116 missing docstrings (rules are self-describing by id)
+#   C0301 line-too-long (black enforces 88; wide docstring tables are intentional)
+#   R0903 too-few-public-methods (every rule is a single-`check` class)
+#   W0613 unused-argument (`graph` is required by the Rule protocol)
+#   R0801 duplicate-code (rules share Finding-construction boilerplate by design)
+#   C0415 import-outside-toplevel (deliberate lazy imports for optional deps)
+disable = [
+    "C0114",
+    "C0115",
+    "C0116",
+    "C0301",
+    "R0903",
+    "W0613",
+    "R0801",
+    "C0415",
+]
+
+[tool.bandit]
+# B101: asserts are used only for internal invariants, not input validation.
+skips = ["B101"]

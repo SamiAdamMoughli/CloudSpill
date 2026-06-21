@@ -56,9 +56,7 @@ class EC2PublicIP:
                     "instance in a private subnet, exposing it through a load "
                     "balancer or NAT only if it must reach the internet."
                 ),
-                tags=frozenset(
-                    {"ec2", "public-ip", "network-exposure", "aws"}
-                ),
+                tags=frozenset({"ec2", "public-ip", "network-exposure", "aws"}),
             )
         ]
 

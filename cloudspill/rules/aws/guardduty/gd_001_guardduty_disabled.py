@@ -50,9 +50,7 @@ class GuardDutyDisabled:
                     "Set enable = true (or remove the argument) so the GuardDuty "
                     "detector stays active in the region."
                 ),
-                tags=frozenset(
-                    {"guardduty", "threat-detection", "monitoring", "aws"}
-                ),
+                tags=frozenset({"guardduty", "threat-detection", "monitoring", "aws"}),
             )
         ]
 

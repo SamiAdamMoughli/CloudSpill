@@ -62,9 +62,7 @@ class CloudTrailLogBucketPublic:
                     "aws_s3_bucket_public_access_block with all four settings true "
                     "so the audit logs cannot be exposed publicly."
                 ),
-                tags=frozenset(
-                    {"cloudtrail", "s3", "public-access", "audit", "aws"}
-                ),
+                tags=frozenset({"cloudtrail", "s3", "public-access", "audit", "aws"}),
             )
         ]
 

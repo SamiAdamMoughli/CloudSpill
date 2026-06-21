@@ -50,9 +50,7 @@ class EC2EbsDefaultEncryptionDisabled:
                     "Set enabled = true (or remove the resource) so EBS default "
                     "encryption stays on for the region."
                 ),
-                tags=frozenset(
-                    {"ec2", "ebs", "encryption", "account-baseline", "aws"}
-                ),
+                tags=frozenset({"ec2", "ebs", "encryption", "account-baseline", "aws"}),
             )
         ]
 

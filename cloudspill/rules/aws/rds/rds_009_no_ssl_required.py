@@ -37,7 +37,9 @@ class RDSNoSslRequired:
             return []
 
         params = as_blocks(node.attributes.get("parameter"))
-        params += [c.attributes for c in node.children if c.resource_type == "parameter"]
+        params += [
+            c.attributes for c in node.children if c.resource_type == "parameter"
+        ]
         for param in params:
             name = str(param.get("name", "")).strip().lower()
             value = str(param.get("value", "")).strip().lower()
@@ -62,7 +64,5 @@ class RDSNoSslRequired:
                 "Set rds.force_ssl = 1 (PostgreSQL) or require_secure_transport = "
                 "ON (MySQL/MariaDB) to require encrypted connections."
             ),
-            tags=frozenset(
-                {"rds", "ssl", "in-transit-encryption", "database", "aws"}
-            ),
+            tags=frozenset({"rds", "ssl", "in-transit-encryption", "database", "aws"}),
         )

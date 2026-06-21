@@ -52,8 +52,6 @@ class ECSNoTaskRole:
                     "Set task_role_arn to a least-privilege IAM role so the "
                     "application receives scoped, short-lived credentials."
                 ),
-                tags=frozenset(
-                    {"ecs", "fargate", "iam", "task-role", "aws"}
-                ),
+                tags=frozenset({"ecs", "fargate", "iam", "task-role", "aws"}),
             )
         ]

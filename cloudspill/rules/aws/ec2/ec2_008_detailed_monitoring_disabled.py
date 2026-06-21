@@ -55,8 +55,6 @@ class EC2DetailedMonitoringDisabled:
                     "Set monitoring = true to enable 1-minute detailed CloudWatch "
                     "metrics for the instance."
                 ),
-                tags=frozenset(
-                    {"ec2", "monitoring", "cloudwatch", "detection", "aws"}
-                ),
+                tags=frozenset({"ec2", "monitoring", "cloudwatch", "detection", "aws"}),
             )
         ]

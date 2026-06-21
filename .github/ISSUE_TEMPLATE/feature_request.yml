@@ -1,0 +1,23 @@
+name: 💡 Feature request
+description: Suggest a capability that isn't a single rule (a new parser, output format, provider, CLI flag, etc.).
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that CloudSpill makes hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should it do? Sketch the CLI / output / config if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or existing workarounds.

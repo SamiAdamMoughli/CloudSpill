@@ -13,6 +13,8 @@ carries a Principal) whose principal is an account-root ARN.
 
 from __future__ import annotations
 
+from typing import Any
+
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode
@@ -25,7 +27,7 @@ from cloudspill.rules.aws.iam.policy_docs import (
 from cloudspill.rules.base import register
 
 
-def _statements(node: IaCNode) -> list[dict]:
+def _statements(node: IaCNode) -> list[dict[str, Any]]:
     if node.resource_type == "aws_iam_role":
         return trust_statements(node)
     if node.resource_type in IDENTITY_POLICY_TYPES:

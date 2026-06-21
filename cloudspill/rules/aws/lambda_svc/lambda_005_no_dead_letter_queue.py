@@ -53,7 +53,13 @@ class LambdaNoDeadLetterQueue:
                     "target_arn to capture failed asynchronous invocations."
                 ),
                 tags=frozenset(
-                    {"lambda", "dead-letter-queue", "resilience", "observability", "aws"}
+                    {
+                        "lambda",
+                        "dead-letter-queue",
+                        "resilience",
+                        "observability",
+                        "aws",
+                    }
                 ),
             )
         ]

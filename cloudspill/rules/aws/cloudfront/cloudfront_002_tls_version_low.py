@@ -95,7 +95,5 @@ class CloudFrontTlsVersionLow:
                 "Supply a custom ACM/IAM certificate and set "
                 "minimum_protocol_version to a TLSv1.2 value (e.g. TLSv1.2_2021)."
             ),
-            tags=frozenset(
-                {"cloudfront", "tls", "encryption-in-transit", "aws"}
-            ),
+            tags=frozenset({"cloudfront", "tls", "encryption-in-transit", "aws"}),
         )

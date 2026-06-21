@@ -60,8 +60,6 @@ class DynamoDBPitrDisabled:
                     "Add a point_in_time_recovery { enabled = true } block to the "
                     "table so it keeps continuous backups for the last 35 days."
                 ),
-                tags=frozenset(
-                    {"dynamodb", "backup", "recovery", "resilience", "aws"}
-                ),
+                tags=frozenset({"dynamodb", "backup", "recovery", "resilience", "aws"}),
             )
         ]

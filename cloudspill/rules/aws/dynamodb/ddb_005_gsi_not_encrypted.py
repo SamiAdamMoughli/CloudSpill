@@ -61,8 +61,6 @@ class DynamoDBGsiNotEncrypted:
                     "kms_key_arn on the table; the GSIs inherit that CMK "
                     "automatically."
                 ),
-                tags=frozenset(
-                    {"dynamodb", "encryption", "kms", "gsi", "aws"}
-                ),
+                tags=frozenset({"dynamodb", "encryption", "kms", "gsi", "aws"}),
             )
         ]

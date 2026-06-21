@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install (with dev dependencies)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: black
+        run: black --check cloudspill/ tests/
+
+      - name: isort
+        run: isort --check --profile black cloudspill/ tests/
+
+      - name: mypy --strict
+        run: mypy --strict cloudspill/
+
+      - name: pylint
+        run: pylint cloudspill/ --ignore=tests
+
+      - name: bandit
+        run: bandit -r cloudspill/ -q -c pyproject.toml
+
+      - name: pytest
+        run: pytest -q

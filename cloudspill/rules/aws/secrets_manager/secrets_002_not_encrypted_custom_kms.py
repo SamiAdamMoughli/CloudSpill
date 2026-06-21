@@ -49,8 +49,6 @@ class SecretsNotCustomKmsEncrypted:
                     "restricts kms:Decrypt to the principals allowed to read the "
                     "secret."
                 ),
-                tags=frozenset(
-                    {"secrets-manager", "encryption", "kms", "cmk", "aws"}
-                ),
+                tags=frozenset({"secrets-manager", "encryption", "kms", "cmk", "aws"}),
             )
         ]

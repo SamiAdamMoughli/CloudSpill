@@ -59,8 +59,6 @@ class RDSNoEnhancedMonitoring:
                     "Set monitoring_interval (e.g. 60) and monitoring_role_arn to "
                     "enable enhanced OS-level monitoring."
                 ),
-                tags=frozenset(
-                    {"rds", "monitoring", "detection", "database", "aws"}
-                ),
+                tags=frozenset({"rds", "monitoring", "detection", "database", "aws"}),
             )
         ]

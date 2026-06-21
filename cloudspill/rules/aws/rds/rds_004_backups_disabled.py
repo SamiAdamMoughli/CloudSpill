@@ -63,8 +63,6 @@ class RDSBackupsDisabled:
                     "Set backup_retention_period to a non-zero value (e.g. 7-35 "
                     "days) appropriate to your recovery requirements."
                 ),
-                tags=frozenset(
-                    {"rds", "backup", "resilience", "recovery", "aws"}
-                ),
+                tags=frozenset({"rds", "backup", "resilience", "recovery", "aws"}),
             )
         ]

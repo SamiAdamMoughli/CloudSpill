@@ -54,7 +54,13 @@ class VPCDefaultRouteTableUsed:
                     "associations."
                 ),
                 tags=frozenset(
-                    {"vpc", "routing", "default-route-table", "network-segmentation", "aws"}
+                    {
+                        "vpc",
+                        "routing",
+                        "default-route-table",
+                        "network-segmentation",
+                        "aws",
+                    }
                 ),
             )
         ]

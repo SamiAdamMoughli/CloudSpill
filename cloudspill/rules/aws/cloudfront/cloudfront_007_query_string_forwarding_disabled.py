@@ -74,7 +74,5 @@ class CloudFrontQueryStringForwardingDisabled:
                 "parameters you need), or migrate the behavior to a cache_policy_id "
                 "with an appropriate query-string configuration."
             ),
-            tags=frozenset(
-                {"cloudfront", "caching", "correctness", "aws"}
-            ),
+            tags=frozenset({"cloudfront", "caching", "correctness", "aws"}),
         )

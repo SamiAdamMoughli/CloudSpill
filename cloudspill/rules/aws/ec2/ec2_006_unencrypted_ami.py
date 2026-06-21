@@ -75,7 +75,5 @@ class EC2UnencryptedAmi:
                 "Set encrypted = true on the AMI's ebs_block_device blocks (or on "
                 "aws_ami_copy directly) so the backing snapshots are encrypted."
             ),
-            tags=frozenset(
-                {"ec2", "ami", "encryption", "data-at-rest", "aws"}
-            ),
+            tags=frozenset({"ec2", "ami", "encryption", "data-at-rest", "aws"}),
         )

@@ -1,0 +1,48 @@
+name: 🎯 Incorrect finding (false positive / false negative)
+description: A rule fired when it shouldn't have, or failed to fire on a real violation.
+labels: ["detection"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Detection accuracy is the core of a scanner. A **false negative** (a missed
+        violation) is treated as a security-relevant bug — thank you for flagging it.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - False positive (fired but shouldn't have)
+        - False negative (should have fired but didn't)
+    validations:
+      required: true
+  - type: input
+    id: rule-id
+    attributes:
+      label: Rule ID
+      description: e.g. S3-007, IAM-001. For a false negative, the rule you expected to fire.
+      placeholder: S3-007
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Terraform / Dockerfile snippet
+      description: The minimal resource definition that triggers the wrong behavior.
+      render: hcl
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen, and why
+      description: Why is this a false positive (safe pattern) or false negative (real exposure)? Link AWS docs / CIS / guidance if relevant.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: CloudSpill version / commit
+      placeholder: 0.1.0 (or git SHA)
+    validations:
+      required: true

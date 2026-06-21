@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 _SEVERITY_CHOICES = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]
 _FORMAT_CHOICES = ["table", "json", "markdown"]
-_RULE_CHOICES = "s3,iam,ec2,rds,docker,az"
+_RULE_CHOICES = "s3,iam,ec2,rds"
 
 _PROVIDER_DEFAULT_MODELS: dict[str, str] = {
     "local": "qwen3.6-35b-a3b",

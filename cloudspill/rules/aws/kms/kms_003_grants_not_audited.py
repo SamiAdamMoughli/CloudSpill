@@ -31,7 +31,9 @@ class KMSGrantNotConstrained:
             return []
 
         blocks = as_blocks(node.attributes.get("constraints"))
-        blocks += [c.attributes for c in node.children if c.resource_type == "constraints"]
+        blocks += [
+            c.attributes for c in node.children if c.resource_type == "constraints"
+        ]
         if blocks:
             return []
 

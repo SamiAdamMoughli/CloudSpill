@@ -60,15 +60,17 @@ class KMSCmkNotRotated:
                     "Set enable_key_rotation = true so KMS rotates the key "
                     "material annually."
                 ),
-                tags=frozenset(
-                    {"kms", "key-rotation", "encryption", "cmk", "aws"}
-                ),
+                tags=frozenset({"kms", "key-rotation", "encryption", "cmk", "aws"}),
             )
         ]
 
     @staticmethod
     def _is_rotatable(node: IaCNode) -> bool:
         attrs = node.attributes
-        spec = str(attrs.get("customer_master_key_spec", "SYMMETRIC_DEFAULT")).strip().upper()
+        spec = (
+            str(attrs.get("customer_master_key_spec", "SYMMETRIC_DEFAULT"))
+            .strip()
+            .upper()
+        )
         usage = str(attrs.get("key_usage", "ENCRYPT_DECRYPT")).strip().upper()
         return spec == "SYMMETRIC_DEFAULT" and usage == "ENCRYPT_DECRYPT"

@@ -179,15 +179,11 @@ class TestCloudFrontTlsVersionLow:
         assert findings[0].severity == Severity.MEDIUM
 
     def test_legacy_tlsv1_triggers(self) -> None:
-        node = self._dist(
-            viewer_certificate={"minimum_protocol_version": "TLSv1"}
-        )
+        node = self._dist(viewer_certificate={"minimum_protocol_version": "TLSv1"})
         assert len(CloudFrontTlsVersionLow().check(node, _empty_graph())) == 1
 
     def test_default_certificate_triggers(self) -> None:
-        node = self._dist(
-            viewer_certificate={"cloudfront_default_certificate": True}
-        )
+        node = self._dist(viewer_certificate={"cloudfront_default_certificate": True})
         assert len(CloudFrontTlsVersionLow().check(node, _empty_graph())) == 1
 
     def test_tls12_clean(self) -> None:
@@ -431,9 +427,7 @@ class TestCloudFrontNoGeoRestriction:
 
     def test_nested_blocks_as_lists_clean(self) -> None:
         node = self._dist(
-            restrictions=[
-                {"geo_restriction": [{"restriction_type": "whitelist"}]}
-            ]
+            restrictions=[{"geo_restriction": [{"restriction_type": "whitelist"}]}]
         )
         assert CloudFrontNoGeoRestriction().check(node, _empty_graph()) == []
 
@@ -457,9 +451,7 @@ class TestCloudFrontQueryStringForwardingDisabled:
         node = self._dist(
             default_cache_behavior={"forwarded_values": {"query_string": False}}
         )
-        findings = CloudFrontQueryStringForwardingDisabled().check(
-            node, _empty_graph()
-        )
+        findings = CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
         assert len(findings) == 1
         assert findings[0].rule_id == "CLOUDFRONT-007"
         assert findings[0].severity == Severity.INFO
@@ -467,14 +459,10 @@ class TestCloudFrontQueryStringForwardingDisabled:
     def test_ordered_behavior_query_string_false_triggers(self) -> None:
         node = self._dist(
             default_cache_behavior={"forwarded_values": {"query_string": True}},
-            ordered_cache_behavior=[
-                {"forwarded_values": {"query_string": False}}
-            ],
+            ordered_cache_behavior=[{"forwarded_values": {"query_string": False}}],
         )
         assert (
-            len(
-                CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
-            )
+            len(CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph()))
             == 1
         )
 
@@ -483,32 +471,26 @@ class TestCloudFrontQueryStringForwardingDisabled:
             default_cache_behavior={"forwarded_values": {"query_string": True}}
         )
         assert (
-            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
-            == []
+            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph()) == []
         )
 
     def test_cache_policy_behavior_skipped(self) -> None:
         # Modern cache-policy behaviors don't use forwarded_values.
-        node = self._dist(
-            default_cache_behavior={"cache_policy_id": "policy-123"}
-        )
+        node = self._dist(default_cache_behavior={"cache_policy_id": "policy-123"})
         assert (
-            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
-            == []
+            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph()) == []
         )
 
     def test_no_forwarded_values_clean(self) -> None:
         node = self._dist(default_cache_behavior={"target_origin_id": "o1"})
         assert (
-            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
-            == []
+            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph()) == []
         )
 
     def test_wrong_resource_type_skipped(self) -> None:
         node = _make_node("aws_s3_bucket.b", "aws_s3_bucket", {})
         assert (
-            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph())
-            == []
+            CloudFrontQueryStringForwardingDisabled().check(node, _empty_graph()) == []
         )
 
 
@@ -525,9 +507,7 @@ class TestCloudFrontCacheKeyMissingHostHeader:
 
     def test_headers_without_host_triggers(self) -> None:
         node = self._dist(
-            default_cache_behavior={
-                "forwarded_values": {"headers": ["User-Agent"]}
-            }
+            default_cache_behavior={"forwarded_values": {"headers": ["User-Agent"]}}
         )
         findings = CloudFrontCacheKeyMissingHostHeader().check(node, _empty_graph())
         assert len(findings) == 1
@@ -562,9 +542,7 @@ class TestCloudFrontCacheKeyMissingHostHeader:
         assert CloudFrontCacheKeyMissingHostHeader().check(node, _empty_graph()) == []
 
     def test_cache_policy_behavior_skipped(self) -> None:
-        node = self._dist(
-            default_cache_behavior={"cache_policy_id": "policy-123"}
-        )
+        node = self._dist(default_cache_behavior={"cache_policy_id": "policy-123"})
         assert CloudFrontCacheKeyMissingHostHeader().check(node, _empty_graph()) == []
 
     def test_wrong_resource_type_skipped(self) -> None:

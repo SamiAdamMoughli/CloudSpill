@@ -1,0 +1,53 @@
+name: 🐞 Bug report
+description: CloudSpill crashes, errors, or behaves incorrectly (not a missed/spurious finding — use the "Incorrect finding" template for those).
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A minimal reproduction (a small `.tf` / `Dockerfile`
+        and the exact command) is the single most useful thing you can include.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did CloudSpill do, and what did you expect instead?
+      placeholder: Running `cloudspill ./infra` raised a traceback instead of printing findings.
+    validations:
+      required: true
+  - type: textarea
+    id: repro-input
+    attributes:
+      label: Minimal input
+      description: The smallest `.tf` / `Dockerfile` snippet that reproduces it.
+      render: hcl
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: The exact command you ran.
+      placeholder: cloudspill ./infra --rules s3 --format json
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output / traceback
+      description: Full output. Re-run with `--debug` for a complete traceback.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: CloudSpill version / commit
+      placeholder: 0.1.0 (or git SHA)
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version & OS
+      placeholder: Python 3.12 on macOS 14
+    validations:
+      required: true

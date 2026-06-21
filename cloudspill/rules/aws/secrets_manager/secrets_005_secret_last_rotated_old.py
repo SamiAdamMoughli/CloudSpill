@@ -43,7 +43,9 @@ class SecretsRotationIntervalTooLong:
             return []
 
         blocks = as_blocks(node.attributes.get("rotation_rules"))
-        blocks += [c.attributes for c in node.children if c.resource_type == "rotation_rules"]
+        blocks += [
+            c.attributes for c in node.children if c.resource_type == "rotation_rules"
+        ]
         for block in blocks:
             days = _to_int(block.get("automatically_after_days"))
             if days is not None and days > _MAX_ROTATION_DAYS:

@@ -30,9 +30,9 @@ class GuardDutyKubernetesProtectionDisabled:
     severity = Severity.MEDIUM
 
     def check(self, node: IaCNode, graph: ResourceGraph) -> list[Finding]:
-        if detector_feature_disabled(node, "EKS_AUDIT_LOGS") or legacy_datasource_disabled(
-            node, "kubernetes", "audit_logs"
-        ):
+        if detector_feature_disabled(
+            node, "EKS_AUDIT_LOGS"
+        ) or legacy_datasource_disabled(node, "kubernetes", "audit_logs"):
             return [self._finding(node)]
         return []
 

@@ -32,7 +32,9 @@ def _as_list(value: object) -> list[str]:
 def _grants_use(actions: list[str]) -> bool:
     for action in actions:
         lowered = action.strip().lower()
-        if lowered in ("*", "kms:*") or lowered.startswith(("kms:decrypt", "kms:reencrypt")):
+        if lowered in ("*", "kms:*") or lowered.startswith(
+            ("kms:decrypt", "kms:reencrypt")
+        ):
             return True
     return False
 
@@ -77,7 +79,5 @@ class KMSKeyPolicyPublicDecrypt:
                 "constrain the wildcard with a Condition (e.g. aws:PrincipalOrgID, "
                 "kms:ViaService)."
             ),
-            tags=frozenset(
-                {"kms", "key-policy", "public-access", "encryption", "aws"}
-            ),
+            tags=frozenset({"kms", "key-policy", "public-access", "encryption", "aws"}),
         )

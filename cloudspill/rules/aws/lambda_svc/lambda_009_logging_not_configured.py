@@ -32,7 +32,9 @@ class LambdaLoggingNotConfigured:
             return []
 
         blocks = as_blocks(node.attributes.get("logging_config"))
-        blocks += [c.attributes for c in node.children if c.resource_type == "logging_config"]
+        blocks += [
+            c.attributes for c in node.children if c.resource_type == "logging_config"
+        ]
         if blocks:
             return []
 
@@ -55,8 +57,6 @@ class LambdaLoggingNotConfigured:
                     "application_log_level, and an explicit log_group with managed "
                     "retention."
                 ),
-                tags=frozenset(
-                    {"lambda", "logging", "observability", "aws"}
-                ),
+                tags=frozenset({"lambda", "logging", "observability", "aws"}),
             )
         ]

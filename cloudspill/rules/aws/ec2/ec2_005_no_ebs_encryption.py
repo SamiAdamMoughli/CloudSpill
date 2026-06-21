@@ -64,7 +64,5 @@ class EC2NoEbsEncryption:
                 "Set encrypted = true on every root_block_device and "
                 "ebs_block_device (optionally with a kms_key_id for a CMK)."
             ),
-            tags=frozenset(
-                {"ec2", "ebs", "encryption", "data-at-rest", "aws"}
-            ),
+            tags=frozenset({"ec2", "ebs", "encryption", "data-at-rest", "aws"}),
         )

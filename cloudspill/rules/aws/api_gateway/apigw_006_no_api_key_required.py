@@ -58,7 +58,13 @@ class APIGatewayNoApiKeyRequired:
                     "(aws_api_gateway_usage_plan) with throttle and quota limits."
                 ),
                 tags=frozenset(
-                    {"api-gateway", "rate-limiting", "usage-plan", "abuse-control", "aws"}
+                    {
+                        "api-gateway",
+                        "rate-limiting",
+                        "usage-plan",
+                        "abuse-control",
+                        "aws",
+                    }
                 ),
             )
         ]

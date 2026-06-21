@@ -76,7 +76,5 @@ class LambdaSecretsInEnvVars:
                 "fetch it at runtime; at minimum set a kms_key_arn to encrypt the "
                 "environment with a CMK."
             ),
-            tags=frozenset(
-                {"lambda", "secrets", "plaintext-credentials", "aws"}
-            ),
+            tags=frozenset({"lambda", "secrets", "plaintext-credentials", "aws"}),
         )

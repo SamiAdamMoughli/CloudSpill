@@ -241,7 +241,12 @@ class TestAPIGWLoggingDisabled:
         node = _make_node(
             "aws_api_gateway_stage.prod",
             "aws_api_gateway_stage",
-            {"access_log_settings": {"destination_arn": "arn:aws:logs:::lg", "format": "x"}},
+            {
+                "access_log_settings": {
+                    "destination_arn": "arn:aws:logs:::lg",
+                    "format": "x",
+                }
+            },
         )
         assert APIGatewayLoggingDisabled().check(node, _empty_graph()) == []
 
@@ -355,9 +360,7 @@ class TestAPIGWResourcePolicyWildcard:
             {
                 "policy": {
                     "Version": "2012-10-17",
-                    "Statement": [
-                        {"Effect": "Allow", "Principal": "*", "Action": "x"}
-                    ],
+                    "Statement": [{"Effect": "Allow", "Principal": "*", "Action": "x"}],
                 }
             },
         )
@@ -387,9 +390,7 @@ class TestAPIGWDefaultExecutionRole:
         assert findings[0].severity == Severity.LOW
 
     def test_caller_passthrough_on_proxy_triggers(self) -> None:
-        node = self._integration(
-            type="AWS_PROXY", credentials="arn:aws:iam::*:user/*"
-        )
+        node = self._integration(type="AWS_PROXY", credentials="arn:aws:iam::*:user/*")
         assert len(APIGatewayDefaultExecutionRole().check(node, _empty_graph())) == 1
 
     def test_aws_integration_missing_credentials_triggers(self) -> None:
@@ -425,9 +426,7 @@ class TestAPIGWDefaultExecutionRole:
 
 class TestAPIGWNoApiKeyRequired:
     def _method(self, **attrs: Any) -> IaCNode:
-        return _make_node(
-            "aws_api_gateway_method.m", "aws_api_gateway_method", attrs
-        )
+        return _make_node("aws_api_gateway_method.m", "aws_api_gateway_method", attrs)
 
     def test_missing_api_key_triggers(self) -> None:
         node = self._method(http_method="GET")

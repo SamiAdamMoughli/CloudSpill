@@ -1,0 +1,37 @@
+name: ➕ New rule request
+description: Propose a new security rule for a resource CloudSpill doesn't yet check.
+labels: ["rule-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Proposing a concrete detection? See the
+        [developer guide](../../docs/developer-guide/adding-rules.md) — PRs welcome.
+  - type: input
+    id: resource
+    attributes:
+      label: Resource type
+      description: The Terraform resource the rule inspects.
+      placeholder: aws_elasticache_replication_group
+    validations:
+      required: true
+  - type: textarea
+    id: condition
+    attributes:
+      label: What should it flag?
+      description: The misconfiguration, the attribute(s) involved, and the safe state.
+      placeholder: Flag when transit_encryption_enabled is not true (data in transit is unencrypted).
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options: [CRITICAL, HIGH, MEDIUM, LOW, INFO]
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: AWS docs, CIS Benchmark item, CWE, or a real-world incident.

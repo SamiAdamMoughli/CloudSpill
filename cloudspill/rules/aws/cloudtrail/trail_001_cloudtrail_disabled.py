@@ -52,9 +52,7 @@ class CloudTrailLoggingDisabled:
                     "secure default) so the trail records management and data "
                     "events."
                 ),
-                tags=frozenset(
-                    {"cloudtrail", "logging", "audit", "visibility", "aws"}
-                ),
+                tags=frozenset({"cloudtrail", "logging", "audit", "visibility", "aws"}),
             )
         ]
 

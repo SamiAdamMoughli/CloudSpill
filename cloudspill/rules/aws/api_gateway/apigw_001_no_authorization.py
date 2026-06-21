@@ -89,7 +89,5 @@ class APIGatewayNoAuthorization:
             file=node.source_file,
             line=node.line,
             remediation=remediation,
-            tags=frozenset(
-                {"api-gateway", "authentication", "public-access", "aws"}
-            ),
+            tags=frozenset({"api-gateway", "authentication", "public-access", "aws"}),
         )

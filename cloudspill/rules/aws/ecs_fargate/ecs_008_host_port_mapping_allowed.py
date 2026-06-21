@@ -52,11 +52,13 @@ class ECSHostPortMapping:
                     continue
                 host_port = _to_int(mapping.get("hostPort"))
                 container_port = _to_int(mapping.get("containerPort"))
-                if host_port not in (None, 0) and host_port != container_port:
+                if (
+                    host_port is not None
+                    and host_port != 0
+                    and host_port != container_port
+                ):
                     return [
-                        self._finding(
-                            node, str(container.get("name", "?")), host_port
-                        )
+                        self._finding(node, str(container.get("name", "?")), host_port)
                     ]
         return []
 
@@ -77,7 +79,5 @@ class ECSHostPortMapping:
                 "Leave hostPort unset (or 0) for dynamic mapping, or move the task "
                 "to awsvpc/Fargate networking where each task gets its own ENI."
             ),
-            tags=frozenset(
-                {"ecs", "fargate", "networking", "host-port", "aws"}
-            ),
+            tags=frozenset({"ecs", "fargate", "networking", "host-port", "aws"}),
         )

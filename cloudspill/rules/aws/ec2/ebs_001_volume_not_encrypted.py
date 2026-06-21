@@ -53,8 +53,6 @@ class EBSVolumeNotEncrypted:
                     "Set encrypted = true (optionally with a customer-managed "
                     "kms_key_id) on the volume."
                 ),
-                tags=frozenset(
-                    {"ebs", "encryption", "data-at-rest", "aws"}
-                ),
+                tags=frozenset({"ebs", "encryption", "data-at-rest", "aws"}),
             )
         ]

@@ -28,7 +28,19 @@ _TARGET_TYPES = frozenset(
     }
 )
 _PLACEHOLDERS = frozenset(
-    {"", "temp", "tmp", "temporary", "test", "todo", "tbd", "changeme", "xxx", "asdf", "foo"}
+    {
+        "",
+        "temp",
+        "tmp",
+        "temporary",
+        "test",
+        "todo",
+        "tbd",
+        "changeme",
+        "xxx",
+        "asdf",
+        "foo",
+    }
 )
 
 

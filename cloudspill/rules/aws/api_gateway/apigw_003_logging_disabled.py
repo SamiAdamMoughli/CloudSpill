@@ -50,8 +50,7 @@ class APIGatewayLoggingDisabled:
             return []
 
         stage_name = str(
-            node.attributes.get("stage_name", "")
-            or node.attributes.get("name", "")
+            node.attributes.get("stage_name", "") or node.attributes.get("name", "")
         )
         return [
             Finding(
@@ -88,11 +87,15 @@ class APIGatewayLoggingDisabled:
             blocks = [settings]
         # Inline blocks may instead appear as child nodes.
         blocks.extend(
-            c.attributes for c in node.children
+            c.attributes
+            for c in node.children
             if c.resource_type == "access_log_settings"
         )
 
         for block in blocks:
-            if isinstance(block, dict) and str(block.get("destination_arn", "")).strip():
+            if (
+                isinstance(block, dict)
+                and str(block.get("destination_arn", "")).strip()
+            ):
                 return True
         return False

@@ -47,8 +47,6 @@ class VPCDefaultVpcInUse:
                     "Build a dedicated VPC with intentional subnets, routing, and "
                     "security groups; avoid placing workloads in the default VPC."
                 ),
-                tags=frozenset(
-                    {"vpc", "default-vpc", "network-segmentation", "aws"}
-                ),
+                tags=frozenset({"vpc", "default-vpc", "network-segmentation", "aws"}),
             )
         ]

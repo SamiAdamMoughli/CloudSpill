@@ -45,7 +45,9 @@ class EC2OpenIngress:
 
     def _finding(self, node: IaCNode, entry: dict[str, object]) -> Finding:
         fp, tp = entry["from_port"], entry["to_port"]
-        port_desc = "all ports" if fp in (None, 0) and tp in (None, 0) else f"ports {fp}-{tp}"
+        port_desc = (
+            "all ports" if fp in (None, 0) and tp in (None, 0) else f"ports {fp}-{tp}"
+        )
         return Finding(
             rule_id=self.rule_id,
             severity=self.severity,

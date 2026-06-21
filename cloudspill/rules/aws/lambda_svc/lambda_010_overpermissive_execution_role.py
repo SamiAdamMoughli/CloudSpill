@@ -69,7 +69,7 @@ class LambdaOverpermissiveExecutionRole:
                 line=node.line,
                 remediation=(
                     "Scope the execution role to the specific actions and resources "
-                    "the function needs; never grant Action \"*\" / Resource \"*\"."
+                    'the function needs; never grant Action "*" / Resource "*".'
                 ),
                 tags=frozenset(
                     {"lambda", "iam", "privilege-escalation", "execution-role", "aws"}

@@ -66,7 +66,14 @@ class CloudTrailLogBucketNoMfaDelete:
                     "account's MFA device)."
                 ),
                 tags=frozenset(
-                    {"cloudtrail", "s3", "mfa-delete", "audit", "tamper-resistance", "aws"}
+                    {
+                        "cloudtrail",
+                        "s3",
+                        "mfa-delete",
+                        "audit",
+                        "tamper-resistance",
+                        "aws",
+                    }
                 ),
             )
         ]

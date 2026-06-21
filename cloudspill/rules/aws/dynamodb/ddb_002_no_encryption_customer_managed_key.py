@@ -76,8 +76,6 @@ class DynamoDBNoCustomerManagedKey:
                     "<cmk arn> } referencing a customer-managed KMS key with a "
                     "scoped key policy."
                 ),
-                tags=frozenset(
-                    {"dynamodb", "encryption", "kms", "cmk", "aws"}
-                ),
+                tags=frozenset({"dynamodb", "encryption", "kms", "cmk", "aws"}),
             )
         ]

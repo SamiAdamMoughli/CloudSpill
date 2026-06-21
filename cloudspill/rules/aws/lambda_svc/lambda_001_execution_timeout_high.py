@@ -62,8 +62,6 @@ class LambdaTimeoutHigh:
                     "Lower timeout to the function's real worst-case duration; for "
                     "genuinely long work use Step Functions or a container."
                 ),
-                tags=frozenset(
-                    {"lambda", "timeout", "cost", "resilience", "aws"}
-                ),
+                tags=frozenset({"lambda", "timeout", "cost", "resilience", "aws"}),
             )
         ]

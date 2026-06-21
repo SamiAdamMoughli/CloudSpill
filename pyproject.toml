@@ -56,6 +56,12 @@ strict = true
 module = "hcl2"
 ignore_missing_imports = true
 
+# Optional AI providers (installed via the `ai` extra); CI type-checks the core
+# without them, and they are imported lazily behind runtime guards.
+[[tool.mypy.overrides]]
+module = ["openai", "openai.*", "anthropic", "anthropic.*"]
+ignore_missing_imports = true
+
 [tool.isort]
 profile = "black"
 

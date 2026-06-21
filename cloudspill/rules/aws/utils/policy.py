@@ -26,7 +26,7 @@ def extract_statements(policy_raw: Any) -> list[dict[str, Any]]:
     """Extract policy statements from a raw ``policy`` attribute value.
 
     Handles a pre-parsed dict, a plain JSON string, and heredoc-wrapped JSON
-    (``<<EOF`` / ``<<-EOF`` ... ``EOF``). Returns ``[]`` when the value cannot
+    . Returns ``[]`` when the value cannot
     be parsed as a policy document.
     """
     if isinstance(policy_raw, dict):

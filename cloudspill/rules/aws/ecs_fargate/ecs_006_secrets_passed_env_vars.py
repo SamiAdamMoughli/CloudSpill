@@ -14,8 +14,6 @@ etc.) and which carries an inline value.
 
 from __future__ import annotations
 
-from typing import Any
-
 from cloudspill.models.findings import Finding, Severity
 from cloudspill.models.graph import ResourceGraph
 from cloudspill.models.nodes import IaCNode

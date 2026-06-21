@@ -38,7 +38,7 @@ class ECSRootUser:
         for container in containers:
             user = str(container.get("user") or "").strip().lower()
             # uid before the ':' is what determines root
-            if user.split(":")[0] in {"", "root", "0"}:
+            if user.split(":", maxsplit=1)[0] in {"", "root", "0"}:
                 return [self._finding(node, str(container.get("name", "?")), user)]
         return []
 

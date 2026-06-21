@@ -74,6 +74,10 @@ profile = "black"
 #   W0613 unused-argument (`graph` is required by the Rule protocol)
 #   R0801 duplicate-code (rules share Finding-construction boilerplate by design)
 #   C0415 import-outside-toplevel (deliberate lazy imports for optional deps)
+#   W2301 unnecessary-ellipsis (`...` bodies in Protocol/ABC method stubs)
+#   R0902/R0911/R0912/R0913/R0914/R0917 size/complexity metrics — the parsers,
+#     enrichers, and graph formatter are inherently branchy; splitting them
+#     purely to satisfy thresholds would hurt readability.
 disable = [
     "C0114",
     "C0115",
@@ -83,6 +87,13 @@ disable = [
     "W0613",
     "R0801",
     "C0415",
+    "W2301",
+    "R0902",
+    "R0911",
+    "R0912",
+    "R0913",
+    "R0914",
+    "R0917",
 ]
 
 [tool.bandit]

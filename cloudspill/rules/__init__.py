@@ -23,7 +23,7 @@ class RuleRegistry:  # pylint: disable=too-few-public-methods
 
     def _discover(self) -> None:
         """Import every rule module to trigger @register, then collect results."""
-        import cloudspill.rules as pkg  # local to avoid circular at module level
+        import cloudspill.rules as pkg  # pylint: disable=import-self  # local to avoid circular at module level
 
         for _, name, _ in pkgutil.walk_packages(pkg.__path__, pkg.__name__ + "."):
             if not name.endswith(".base"):
